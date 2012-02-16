@@ -2,9 +2,9 @@
  * blog page
  */
 
-this.blog = {
-    note: function (req,res){
-        res.dump( this );
-        res.end();
+this.blog = app.extend('root', {
+    del: function (){
+        app.res.write("blog:"+app.req.url);
+        app.res.end();
     }
-};
+});

@@ -1,11 +1,19 @@
 
 var port = 8888;
 
-var http = require('http'),
-    querystring = require('querystring'),
-    url = require('url');
+app = {
+    'extend': function(parent_name, child){
+        var parent = require('./_app/controllers/'+ parent_name)[parent_name];
+        for(i in parent){ if( typeof(child[i]) == "undefined") { child[i] = parent[i]; } }
+        return child;
+    },
+    dump: function(variables){
+        this.res.write( '<pre>'+ require('util').inspect(variables) + '</pre>' );    
+    }
+};
 
-http.createServer(function(req, res){
+
+require('http').createServer(function(req, res){
 	res.setHeader('Server', 'eNode/0.1');
 	res.setHeader('X-Powered-By', 'node.js');
 	console.log(req.url);
@@ -15,21 +23,20 @@ http.createServer(function(req, res){
 		_postData += chunk;
 	}).on('end', function(){
 	    /*get & post*/
-		req.postv = querystring.parse(_postData);
-		var rx = url.parse(req.url, true);
+		app.post = require('querystring').parse(_postData);
+		var rx = require('url').parse(req.url, true);
 		var controller_action = rx.pathname.slice(1).split('/');
-		req.getv = rx.query;
-		req.getv['controller'] = controller_action[0] ? controller_action.shift() : 'index';
-		req.getv['action'] = controller_action[0] ? controller_action.shift() : 'index';
-		req.getv['pathquery'] = controller_action; 
+		app.get = rx.query;
+		app.get['controller'] = controller_action[0] ? controller_action.shift() : 'index';
+		app.get['action'] = controller_action[0] ? controller_action.shift() : 'index';
+		app.get['querypath'] = controller_action;
+		app.req = req;
+		app.res = res;
 		
-		res.dump = function(variables){
-		    this.write( '<pre>'+ require('util').inspect(variables) + '</pre>' );
-		}
 		try{
-    		controllers = require('./_app/controllers/'+ req.getv.controller)[ req.getv.controller ];
+    		controllers = require('./_app/controllers/'+ app.get.controller)[ app.get.controller ];
     		if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
-    		controllers[ req.getv.action ](req, res);
+    		controllers[ app.get.action ]();
 		}
 		catch(e){
 		    //TODO: production: 404 dev: 500
@@ -40,13 +47,7 @@ http.createServer(function(req, res){
 }).listen(port);
 console.log('Server running at http://127.0.0.1:'+ port +'/');
 
-app = {
-    'extend': function(parent, child){
-        for(i in dest){ if(typeof(child[i]) == undefined) child[i] = parent[i]; }
-        return child;
-    }
-    
-};
+
 
 
 

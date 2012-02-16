@@ -2,16 +2,20 @@
  * index page
  */
 
-exports.index = app.extends('blog',{
+exports.index = {
     
     __construct: function(){
         console.log("index init...");
     },
     
-    index: function(req,res){
-        res.write( '<h1>hi,this is index page.</h1>' );
-        res.dump( this );
-        console.log(this);
-        res.end();
+    index: function(){
+        app.res.setHeader("content-type", "text/html; charset=UTF-8");
+        app.res.write("app.post");
+        app.dump(app.post);
+        
+        app.res.write("app.get");
+        app.dump(app.get);
+        
+        app.res.end();
     }
-});
+};
