@@ -41,8 +41,9 @@ http.createServer(function(req, res){
 console.log('Server running at http://127.0.0.1:'+ port +'/');
 
 app = {
-    'extends': function(parent, child){
-    
+    'extend': function(parent, child){
+        for(i in dest){ if(typeof(child[i]) == undefined) child[i] = parent[i]; }
+        return child;
     }
 };
 

@@ -2,7 +2,7 @@
 
 // 创建原型
 app = {
-    'extends': function(dest,source){
+    'extend': function(dest,source){
         for(i in dest){
             if(typeof(source[i]) == undefined) source[i] = dest[i];
         }
@@ -10,21 +10,23 @@ app = {
     }
 }
 
-
 var obj = {
     f1: function(){
         console.log("I am dest object");  
     }
 };
 
-t = app.extends(obj, {
-    name: 'wx',
-    f1: function() {
+var t = app.extend({
+    "name": "wx",
+    "f1": function() {
         console.log("I am source object");
     },
-    f2: function(){ },
-    f3: function () { }
+    "f2": function(){ },
+    "f3": function () { }
 });
+
+
+
 console.log(t);
 t.f1();
 
