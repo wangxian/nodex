@@ -45,6 +45,7 @@ app = {
         for(i in dest){ if(typeof(child[i]) == undefined) child[i] = parent[i]; }
         return child;
     }
+    
 };
 
 
