@@ -4,17 +4,17 @@
 
 exports.index = {
     
-    __construct: function(){
-        console.log("index init...");
-    },
+    // __construct: function(){
+        // console.log("index init...");
+    // },
     
     index: function(){
-        app.res.setHeader("content-type", "text/html; charset=UTF-8");
-        app.res.write("app.post");
-        app.dump(app.post);
+        // app.res.setHeader("content-type", "text/html; charset=UTF-8");
+        // app.res.write("app.post");
+        // app.dump(app.post);
         
         app.res.write("app.get");
-        app.dump(app.get);
+        //app.dump(app.get);
         
         app.res.end();
     }

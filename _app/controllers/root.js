@@ -3,9 +3,9 @@
  */
 
 this.root = {
-    __construct: function(){
-        console.log("root __construct init...");
-    },
+    // __construct: function(){
+        // console.log("root __construct init...");
+    // },
     add: function (){
         app.res.write("root:"+app.req.url);
         app.res.end();
