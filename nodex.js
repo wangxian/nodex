@@ -1,6 +1,6 @@
 
 var port = 8888;
-var static_dir = 'assets';
+var assets_dir = 'assets';
 
 app = {
     'extend': function(parent_name, child){
@@ -12,99 +12,90 @@ app = {
     'redirect': function(url){ this.res.writeHeader(301, {"Location": url}); this.res.end(); }
 };
 var http = require('http'),
+    path = require('path'),
+    fs = require('fs');
     url = require('url'),
     querystring = require('querystring');
 
 http.createServer(function(req, res){
-	res.setHeader('Server', 'eNode/0.1');
+	res.setHeader('Server', 'nodex/0.1');
 	res.setHeader('X-Powered-By', 'node.js');
 	console.log('['+ new Date() +'] URL = ' + req.url);
 	
-	var _postData = '';
-	req.on('data', function(chunk){
-		_postData += chunk;
-	}).on('end', function(){
-		app.post = querystring.parse(_postData);
-		var rx = url.parse(req.url, true);
-		var controller_action = rx.pathname.slice(1).split('/');
-		
-		app.get = rx.query;
-		app.get['controller'] = controller_action[0] ? controller_action.shift() : 'index';
-		app.get['action'] = controller_action[0] ? controller_action.shift() : 'index';
-		app.get['querypath'] = controller_action;
-		app.req = req;
-		app.res = res;
-		
-		try{
-    		controllers = require('./_app/controllers/'+ app.get.controller)[ app.get.controller ];
-    		if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
-    		controllers[ app.get.action ]();
-		}
-		catch(e){
-		    //TODO: production: 404 dev: 500
-		    res.end("Error:" + e.message);
-		    return 0;
-		}
-	});
+	if(req.url=='/favicon.ico' || req.url.slice(1,7)=='assets'){
+	    var filename = path.join(__dirname,req.url);
+	    path.exists(filename, function(exists){
+            if(exists){
+                fs.readFile(filename,'binary', function(error,file){
+                    if(error) {
+                        res.writeHead(500, {'content-type': 'text/plain'})
+                        res.end(error.message);
+                    }else{
+                        var expires = new Date();
+                        expires.setTime( expires.getTime() + (86400000 * 15) );
+                        res.setHeader("Expires",  expires.toUTCString());
+                        res.setHeader("Cache-Control", "max-age="+ (86400 * 15));
+                        fs.stat(filename, function (error, stat) {
+                            var lastModified = stat.mtime.toUTCString();
+                            if (req.headers['if-modified-since'] && lastModified == req.headers['if-modified-since']) {
+                                res.writeHead(304, "Not Modified");
+                                res.end();
+                            }else{
+                                res.setHeader("Last-Modified", lastModified);
+                                res.writeHead(200, {'content-type':  contentTypes[ path.extname(filename).slice(1) ] || 'text/plain' } );
+                                res.end(file,'binary'); 
+                            }
+                        });  
+                    }
+                }) 
+            }else{
+                res.writeHead(404, {'content-type': 'text/plain'});
+                res.end('File not Found!');
+            }
+        });
+	}else{
+	    var _postData = '';
+    	req.on('data', function(chunk){
+    		_postData += chunk;
+    	}).on('end', function(){
+    		app.post = querystring.parse(_postData);
+    		var rx = url.parse(req.url, true);
+    		var controller_action = rx.pathname.slice(1).split('/');
+    		
+    		app.get = rx.query;
+    		app.get['controller'] = controller_action[0] ? controller_action.shift() : 'index';
+    		app.get['action'] = controller_action[0] ? controller_action.shift() : 'index';
+    		app.get['querypath'] = controller_action;
+    		app.req = req;
+    		app.res = res;
+    		
+    		try{
+        		controllers = require('./_app/controllers/'+ app.get.controller)[ app.get.controller ];
+        		if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
+        		controllers[ app.get.action ]();
+    		}
+    		catch(e){
+    		    //TODO: production: 404 dev: 500
+    		    res.end("Error:" + e.message);
+    		    return 0;
+    		}
+	   });
+    }
+
 }).listen(port);
 console.log('Server running at http://127.0.0.1:'+ port +'/');
 
 var contentTypes = {
-    "aiff": "audio/x-aiff", "arj": "application/x-arj-compressed",
-    "asf": "video/x-ms-asf", "asx": "video/x-ms-asx", "au": "audio/ulaw", "avi": "video/x-msvideo",
-    "bcpio": "application/x-bcpio",
-    "ccad": "application/clariscad", "cod": "application/vnd.rim.cod",
-    "com": "application/x-msdos-program", "cpio": "application/x-cpio",
-    "cpt": "application/mac-compactpro", "csh": "application/x-csh",
-    "css": "text/css", "deb": "application/x-debian-package",
-    "dl": "video/dl", "doc": "application/msword",
-    "drw": "application/drafting",
-    "dvi": "application/x-dvi", "dwg": "application/acad",
-    "dxf": "application/dxf", "dxr": "application/x-director", "etx": "text/x-setext",
-    "ez": "application/andrew-inset", "fli": "video/x-fli",
-    "flv": "video/x-flv", "gif": "image/gif", "gl": "video/gl",
-    "gtar": "application/x-gtar", "gz": "application/x-gzip",
-    "hdf": "application/x-hdf", "hqx": "application/mac-binhex40",
-    "html": "text/html", "ice": "x-conference/x-cooltalk",
-    "ief": "image/ief", "igs": "model/iges", "ips": "application/x-ipscript",
-    "ipx": "application/x-ipix", "jad": "text/vnd.sun.j2me.app-descriptor",
+    "asf": "video/x-ms-asf", "avi": "video/x-msvideo","rar": "application/x-rar-compressed",
+    "css": "text/css", "deb": "application/x-debian-package","doc": "application/msword",
+    "flv": "video/x-flv", "gif": "image/gif","gz": "application/x-gzip", "html": "text/html", 
     "jar": "application/java-archive", "jpeg": "image/jpeg", "jpg": "image/jpeg", 
     "js": "text/javascript", "json": "application/json",
-    "latex": "application/x-latex", "lsp": "application/x-lisp",
-    "lzh": "application/octet-stream", "m": "text/plain", "m3u": "audio/x-mpegurl", 
-    "man": "application/x-troff-man", "me": "application/x-troff-me", "midi": "audio/midi",
-    "mif": "application/x-mif", "mime": "www/mime",
-    "movie": "video/x-sgi-movie", "mp4": "video/mp4",
-    "mpg": "video/mpeg", "mpga": "audio/mpeg", "ms": "application/x-troff-ms",
-    "nc": "application/x-netcdf", "oda": "application/oda",
-    "ogm": "application/ogg", "pbm": "image/x-portable-bitmap", "pdf": "application/pdf",
-    "pgm": "image/x-portable-graymap", "pgn": "application/x-chess-pgn",
-    "pgp": "application/pgp", "pm": "application/x-perl",
-    "png": "image/png", "pnm": "image/x-portable-anymap", "ppm": "image/x-portable-pixmap",
-    "ppz": "application/vnd.ms-powerpoint", "pre": "application/x-freelance",
-    "prt": "application/pro_eng", "ps": "application/postscript", "qt": "video/quicktime",
-    "ra": "audio/x-realaudio", "rar": "application/x-rar-compressed", "ras": "image/x-cmu-raster",
-    "rgb": "image/x-rgb", "rm": "audio/x-pn-realaudio", "rpm": "audio/x-pn-realaudio-plugin",
-    "rtf": "text/rtf", "rtx": "text/richtext", "scm": "application/x-lotusscreencam",
-    "set": "application/set", "sgml": "text/sgml", "sh": "application/x-sh",
-    "shar": "application/x-shar", "silo": "model/mesh", "sit": "application/x-stuffit",
-    "skt": "application/x-koan", "smil": "application/smil", "snd": "audio/basic",
-    "sol": "application/solids", "spl": "application/x-futuresplash",
-    "src": "application/x-wais-source",
-    "stl": "application/SLA", "stp": "application/STEP", "sv4cpio": "application/x-sv4cpio",
-    "sv4crc": "application/x-sv4crc", "svg": "image/svg+xml", "swf": "application/x-shockwave-flash",
-    "tar": "application/x-tar", "tcl": "application/x-tcl",
-    "tex": "application/x-tex", "texinfo": "application/x-texinfo", "tgz": "application/x-tar-gz",
-    "tiff": "image/tiff", "tr": "application/x-troff",
-    "tsi": "audio/TSP-audio", "tsp": "application/dsptype",
-    "tsv": "text/tab-separated-values", "txt": "text/plain", "unv": "application/i-deas",
-    "ustar": "application/x-ustar", "vcd": "application/x-cdlink",
-    "vda": "application/vda", "vivo": "video/vnd.vivo",
-    "vrm": "x-world/x-vrml", "wav": "audio/x-wav", "wax": "audio/x-ms-wax", "wma": "audio/x-ms-wma",
-    "wmv": "video/x-ms-wmv", "wmx": "video/x-ms-wmx",
-    "wrl": "model/vrml", "wvx": "video/x-ms-wvx", "xbm": "image/x-xbitmap", 
-    "xlw": "application/vnd.ms-excel",
-    "xml": "text/xml", "xpm": "image/x-xpixmap", "xwd": "image/x-xwindowdump", "xyz": "chemical/x-pdb",
+    "midi": "audio/midi","mime": "www/mime","mp4": "video/mp4",
+    "pdf": "application/pdf","png": "image/png", "rtf": "text/rtf", "sh": "application/x-sh",
+    "svg": "image/svg+xml", "swf": "application/x-shockwave-flash",
+    "tar": "application/x-tar", "tgz": "application/x-tar-gz","tiff": "image/tiff", "txt": "text/plain",
+    "wav": "audio/x-wav", "wma": "audio/x-ms-wma","wmv": "video/x-ms-wmv", "xml": "text/xml", "xpm": "image/x-xpixmap",
     "zip": "application/zip", "undefined": "application/octet-stream"
 };
 

@@ -13,7 +13,7 @@ exports.index = {
         // app.res.write("app.post");
         // app.dump(app.post);
         
-        app.res.write("app.get");
+        app.dump(app.req.headers);
         //app.dump(app.get);
         
         app.res.end();
