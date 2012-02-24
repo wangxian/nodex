@@ -1,6 +1,6 @@
 var fs = require('fs');
 
-t = fs.createReadStream('./mime.js');
+t = fs.createReadStream('/etc/passwd');
 var data = '';
 t.on('data',function(chunk){
     data += chunk;
@@ -8,3 +8,4 @@ t.on('data',function(chunk){
     console.log(data);
     console.log("file end...."); 
 });
+
