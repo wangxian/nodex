@@ -15,6 +15,7 @@ var http = require('http'),
     path = require('path'),
     fs = require('fs');
     url = require('url'),
+    zlib = require('zlib'),
     querystring = require('querystring');
 
 http.createServer(function(req, res){
@@ -22,8 +23,27 @@ http.createServer(function(req, res){
 	res.setHeader('X-Powered-By', 'node.js');
 	console.log('['+ new Date() +'] URL = ' + req.url);
 	
-	if(req.url=='/favicon.ico' || req.url.slice(1,7)=='assets'){
+	if(req.url.slice(1,7)=='assets'){
 	    var filename = path.join(__dirname,req.url);
+	    
+	    var raw = fs.createReadStream(filename);
+        var acceptEncoding = req.headers['accept-encoding'] || "";
+        if (acceptEncoding.match(/\bgzip\b/)) {
+            res.writeHead(200, "Ok", {
+                'Content-Encoding': 'gzip'
+            });
+            raw.pipe(zlib.createGzip()).pipe(res);
+        } else if (acceptEncoding.match(/\bdeflate\b/)) {
+            res.writeHead(200, "Ok", {
+                'Content-Encoding': 'deflate'
+            });
+            raw.pipe(zlib.createDeflate()).pipe(res);
+        } else {
+            res.writeHead(200, "Ok");
+            raw.pipe(response);
+        }
+	    
+	    /**
 	    path.exists(filename, function(exists){
             if(exists){
                 fs.readFile(filename,'binary', function(error,file){
@@ -48,11 +68,13 @@ http.createServer(function(req, res){
                         });  
                     }
                 }) 
-            }else{
+            }
+            else{
                 res.writeHead(404, {'content-type': 'text/plain'});
                 res.end('File not Found!');
             }
         });
+        /**/
 	}else{
 	    var _postData = '';
     	req.on('data', function(chunk){
@@ -83,7 +105,7 @@ http.createServer(function(req, res){
     }
 
 }).listen(port);
-console.log('Server running at http://127.0.0.1:'+ port +'/');
+console.log('Server running at port '+ port);
 
 var contentTypes = {
     "asf": "video/x-ms-asf", "avi": "video/x-msvideo","rar": "application/x-rar-compressed",
