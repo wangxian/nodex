@@ -12,7 +12,6 @@ app = {
     'redirect': function(url){ this.res.writeHeader(301, {"Location": url}); this.res.end(); }
 };
 var http = require('http'),
-    path = require('path'),
     fs = require('fs');
     url = require('url'),
     zlib = require('zlib'),
@@ -21,27 +20,46 @@ var http = require('http'),
 http.createServer(function(req, res){
 	res.setHeader('Server', 'nodex/0.1');
 	res.setHeader('X-Powered-By', 'node.js');
-	console.log('['+ new Date() +'] URL = ' + req.url);
+	console.log(new Date() + ' - ' + req.url);
 	
-	if(req.url.slice(1,7)=='assets'){
-	    var filename = path.join(__dirname,req.url);
-	    
-	    var raw = fs.createReadStream(filename);
-        var acceptEncoding = req.headers['accept-encoding'] || "";
-        if (acceptEncoding.match(/\bgzip\b/)) {
-            res.writeHead(200, "Ok", {
-                'Content-Encoding': 'gzip'
-            });
-            raw.pipe(zlib.createGzip()).pipe(res);
-        } else if (acceptEncoding.match(/\bdeflate\b/)) {
-            res.writeHead(200, "Ok", {
-                'Content-Encoding': 'deflate'
-            });
-            raw.pipe(zlib.createDeflate()).pipe(res);
-        } else {
-            res.writeHead(200, "Ok");
-            raw.pipe(response);
-        }
+	if(req.url=='/favicon.ico' || req.url.slice(1,7)=='assets'){
+	    var filename = __dirname+req.url;
+	    fs.stat(filename, function(error, stat){
+	       if(error) { 
+	           res.writeHead(500, {'content-type': 'text/plain'});
+	           res.end(error.message);
+           }else{
+               var lastModified = stat.mtime.toUTCString();
+               res.setHeader("Last-Modified", lastModified);
+               if (req.headers['if-modified-since'] && lastModified == req.headers['if-modified-since']) {
+                    res.writeHead(304, "Not Modified");
+                    res.end();
+                }else{
+                    res.setHeader('Content-Type', contentTypes[ filename.slice(filename.lastIndexOf('.')+1) ] || 'text/plain');
+                    
+                    if(/\.(gif|png|jpg|js|css)$/i.test(filename)){
+                        var expires = new Date();
+                        expires.setTime( expires.getTime() + (86400000 * 15) );
+                        res.setHeader("Expires",  expires.toUTCString());
+                        res.setHeader("Cache-Control", "max-age="+ (86400 * 15));
+                    }
+                    
+                    var raw = fs.createReadStream(filename);
+                    var acceptEncoding = req.headers['accept-encoding'] || '';
+                    var matched = /\.(html|js|css)$/i.test(filename);
+                    if(matched && /\bgzip\b/.test(acceptEncoding)){
+                        res.writeHead(200, {'Content-Encoding': 'gzip'});
+                        raw.pipe(zlib.createGzip()).pipe(res);
+                    }else if(matched && /\bdeflate\b/.test(acceptEncoding)){
+                        res.writeHead(200, {'Content-Encoding': 'deflate'});
+                        raw.pipe(zlib.createDeflate()).pipe(res);
+                    }else{
+                        res.writeHead(200);
+                        raw.pipe(res);
+                    }
+                }
+           }
+	    });
 	    
 	    /**
 	    path.exists(filename, function(exists){
