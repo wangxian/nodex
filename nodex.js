@@ -4,7 +4,7 @@ var assets_dir = 'assets';
 
 app = {
     'extend': function(parent_name, child){
-        var parent = require('./_app/controllers/'+ parent_name)[parent_name];
+        var parent = require('./_app/controllers/'+ parent_name)['controller'];
         for(i in parent){ if( typeof(child[i]) == "undefined") { child[i] = parent[i]; } }
         return child;
     },
@@ -60,39 +60,6 @@ http.createServer(function(req, res){
                 }
            }
 	    });
-	    
-	    /**
-	    path.exists(filename, function(exists){
-            if(exists){
-                fs.readFile(filename,'binary', function(error,file){
-                    if(error) {
-                        res.writeHead(500, {'content-type': 'text/plain'})
-                        res.end(error.message);
-                    }else{
-                        var expires = new Date();
-                        expires.setTime( expires.getTime() + (86400000 * 15) );
-                        res.setHeader("Expires",  expires.toUTCString());
-                        res.setHeader("Cache-Control", "max-age="+ (86400 * 15));
-                        fs.stat(filename, function (error, stat) {
-                            var lastModified = stat.mtime.toUTCString();
-                            if (req.headers['if-modified-since'] && lastModified == req.headers['if-modified-since']) {
-                                res.writeHead(304, "Not Modified");
-                                res.end();
-                            }else{
-                                res.setHeader("Last-Modified", lastModified);
-                                res.writeHead(200, {'content-type':  contentTypes[ path.extname(filename).slice(1) ] || 'text/plain' } );
-                                res.end(file,'binary'); 
-                            }
-                        });  
-                    }
-                }) 
-            }
-            else{
-                res.writeHead(404, {'content-type': 'text/plain'});
-                res.end('File not Found!');
-            }
-        });
-        /**/
 	}else{
 	    var _postData = '';
     	req.on('data', function(chunk){
@@ -110,7 +77,7 @@ http.createServer(function(req, res){
     		app.res = res;
     		
     		try{
-        		controllers = require('./_app/controllers/'+ app.get.controller)[ app.get.controller ];
+        		controllers = require('./_app/controllers/'+ app.get.controller)['controller'];
         		if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
         		controllers[ app.get.action ]();
     		}
@@ -130,7 +97,7 @@ var contentTypes = {
     "css": "text/css", "deb": "application/x-debian-package","doc": "application/msword",
     "flv": "video/x-flv", "gif": "image/gif","gz": "application/x-gzip", "html": "text/html", 
     "jar": "application/java-archive", "jpeg": "image/jpeg", "jpg": "image/jpeg", 
-    "js": "text/javascript", "json": "application/json",
+    "js": "text/javascript", "json": "application/json",'ico': 'image/x-icon',
     "midi": "audio/midi","mime": "www/mime","mp4": "video/mp4",
     "pdf": "application/pdf","png": "image/png", "rtf": "text/rtf", "sh": "application/x-sh",
     "svg": "image/svg+xml", "swf": "application/x-shockwave-flash",

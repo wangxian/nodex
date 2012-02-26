@@ -2,7 +2,7 @@
  * index page
  */
 
-exports.index = {
+exports.controller = {
     
     // __construct: function(){
         // console.log("index init...");

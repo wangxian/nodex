@@ -2,7 +2,7 @@
  * root controller
  */
 
-this.root = {
+this.controller = {
     // __construct: function(){
         // console.log("root __construct init...");
     // },

@@ -2,7 +2,7 @@
  * blog page
  */
 
-this.blog = app.extend('root', {
+this.controller = app.extend('root', {
     index: function(){
         // app.res.writeHeader(301, {"Location": "http://www.soso.com"});
         // app.res.end();
