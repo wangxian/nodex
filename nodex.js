@@ -23,11 +23,11 @@ http.createServer(function(req, res){
 	console.log(new Date() + ' - ' + req.url);
 	
 	if(req.url=='/favicon.ico' || req.url.slice(1,7)=='assets'){
-	    var filename = __dirname+req.url;
+	    var filename = __dirname + req.url.replace(/\.\./g,'');
 	    fs.stat(filename, function(error, stat){
 	       if(error) { 
 	           res.writeHead(500, {'content-type': 'text/plain'});
-	           res.end(error.message);
+	           res.end('404 File Not Found.');
            }else{
                var lastModified = stat.mtime.toUTCString();
                res.setHeader("Last-Modified", lastModified);
