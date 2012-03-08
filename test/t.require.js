@@ -13,6 +13,8 @@ app = {id: 18};
 // }
 // ct = new controller();
 //r.test.apply(ct);
-require('./t.require2').inner();
+
+require('./t.require2');
+inner(); // 只要不加var 就是全局的
 
 

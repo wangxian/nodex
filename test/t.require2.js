@@ -6,7 +6,7 @@ console.log( 'require2 is loaded' );
     // console.log(app);
 // }
 
-this.inner = function (){
+inner = function (){
     console.log(app);
 }
 
