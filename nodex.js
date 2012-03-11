@@ -1,10 +1,28 @@
 
+view = {
+    render: function(ctx,args){
+        var code = 'var ';
+        for(key in args) { code += key+ '='+ args[key] +','; }
+        code += code.slice(0,-1)+';';
+        
+        code += "var out='"+ ctx.replace(/'/g,"\\'").replace(/\{\{(=?)(.+?)\}\}/g,function(txt,a,b){
+            return a=='='?"'+"+ b +"+'":"';"+ b +"out+='";
+        }) +"';return out;";
+        
+        
+        return code;
+    }
+}
+out = view.render('Hello {{=name}} <div id="wrapper" class=\'lt\'>{{ if(1>2){  }}<h1>null</h1>{{ }else{ }}<h1>{{=name}}</h1> {{ } }} <p>pppoe</p>', {name: 'nodex'});
+console.log(out);
+process.exit();
+
 var port = 8888;
 var assets_dir = 'assets';
 
 app = {
-    'extend': function(parent_name, child){
-        var parent = require('./_app/controllers/'+ parent_name)['controller'];
+    'extend': function(parent, child){
+        var parent = require('./_app/controllers/'+ parent)['controller'];
         for(i in parent){ if( typeof(child[i]) == "undefined") { child[i] = parent[i]; } }
         return child;
     },
@@ -77,7 +95,7 @@ http.createServer(function(req, res){
     		app.res = res;
     		
     		try{
-        		controllers = require('./_app/controllers/'+ app.get.controller)['controller'];
+        		controllers = require('./app/controllers/'+ app.get.controller)['controller'];
         		if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
         		controllers[ app.get.action ]();
     		}
@@ -90,19 +108,17 @@ http.createServer(function(req, res){
     }
 
 }).listen(port);
-console.log('Server running at port '+ port);
+console.log('Server running at port http://hostname:' + port);
 
 var contentTypes = {
-    "asf": "video/x-ms-asf", "avi": "video/x-msvideo","rar": "application/x-rar-compressed",
+    "avi": "video/x-msvideo","rar": "application/x-rar-compressed",
     "css": "text/css", "deb": "application/x-debian-package","doc": "application/msword",
     "flv": "video/x-flv", "gif": "image/gif","gz": "application/x-gzip", "html": "text/html", 
     "jar": "application/java-archive", "jpeg": "image/jpeg", "jpg": "image/jpeg", 
-    "js": "text/javascript", "json": "application/json",'ico': 'image/x-icon',
-    "midi": "audio/midi","mime": "www/mime","mp4": "video/mp4",
-    "pdf": "application/pdf","png": "image/png", "rtf": "text/rtf", "sh": "application/x-sh",
-    "svg": "image/svg+xml", "swf": "application/x-shockwave-flash",
-    "tar": "application/x-tar", "tgz": "application/x-tar-gz","tiff": "image/tiff", "txt": "text/plain",
-    "wav": "audio/x-wav", "wma": "audio/x-ms-wma","wmv": "video/x-ms-wmv", "xml": "text/xml", "xpm": "image/x-xpixmap",
+    "js": "text/javascript", "json": "application/json",'ico': 'image/x-icon',"midi": "audio/midi","mime": "www/mime", 
+    "mp4": "video/mp4", "pdf": "application/pdf","png": "image/png", "rtf": "text/rtf", "swf": "application/x-shockwave-flash",
+    "tar": "application/x-tar", "tgz": "application/x-tar-gz", "txt": "text/plain",
+    "wav": "audio/x-wav", "wma": "audio/x-ms-wma","wmv": "video/x-ms-wmv", "xml": "text/xml",
     "zip": "application/zip", "undefined": "application/octet-stream"
 };
 
