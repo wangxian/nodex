@@ -13,9 +13,10 @@ exports.controller = {
         // app.res.write("app.post");
         // app.dump(app.post);
         
-        app.dump(app.req.headers);
-        app.dump(app.get);
+        //app.dump(app.req.headers);
+        //app.dump(app.get);
         
-        app.res.end();
+
+        view.render('index/index.html',{'name':'nodex'});
     }
 };
