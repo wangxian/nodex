@@ -118,6 +118,10 @@ view = {
             if(filename.lastIndexOf('.html')==-1) filename+='.html';
             filename = __dirname+'/app/views/'+filename; 
         }
+        console.log(filename);
+        if(typeof(args)=='undefined') args={};
+        args['render']=function(filename, args){ return view.render(filename, args); };
+        console.log(args);
         
         var fn = this._cache[ utils.md5(filename) ];
         if(typeof fn == 'undefined'){
@@ -126,10 +130,10 @@ view = {
                 if(err) app.res.end(err.message);
                 fn = it.compile(ctx);
                 //it._cache[ utils.md5(filename) ] = fn;
-                app.res.end(fn(args));
+                return fn(args);
             });  
         }else{
-            app.res.end(fn(args));
+            return fn(args);
         }
     },
     'compile': function(ctx){
@@ -137,8 +141,7 @@ view = {
             replace(/\{\{(.+?)\}\}/g,"'+it.$1+'").
             replace(/\s*<%(.+?)%>/g, "';$1 out+='").
             replace(/\n/g,"'+\"\\n\"+'") +"';return out;";        
-        //console.log(code);
-        //return new Function();
+        console.log(code);return new Function();
         return new Function('it',code);
     },
     '_cache': {}

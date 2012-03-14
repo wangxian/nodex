@@ -14,9 +14,8 @@ exports.controller = {
         // app.dump(app.post);
         
         //app.dump(app.req.headers);
-        //app.dump(app.get);
+        //app.dump(view._cache);
         
-
-        view.render('index/index.html',{'name':'nodex'});
+        app.dump(view.render('index/index', {'name':'nodex'}));
     }
 };
