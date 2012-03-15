@@ -9,13 +9,14 @@ exports.controller = {
     // },
     
     index: function(){
-        // app.res.setHeader("content-type", "text/html; charset=UTF-8");
+        //app.res.setHeader("content-type", "text/html; charset=UTF-8");
         // app.res.write("app.post");
         // app.dump(app.post);
         
         //app.dump(app.req.headers);
         //app.dump(view._cache);
         
-        app.dump(view.render('index/index', {'name':'nodex'}));
+        $t = view.render('index/index', {'name':'nodex'});
+        app.res.end($t);
     }
 };

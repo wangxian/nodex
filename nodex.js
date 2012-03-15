@@ -12,13 +12,14 @@ app = {
     'redirect': function(url){ this.res.writeHeader(301, {"Location": url}); this.res.end(); }
 };
 var http = require('http'),
-    fs = require('fs');
-    url = require('url'),
+    fs   = require('fs'),
+    path = require('path'),
+    url  = require('url'),
     zlib = require('zlib'),
     querystring = require('querystring');
 
 http.createServer(function(req, res){
-	res.setHeader('Server', 'nodex/0.1');
+	res.setHeader('Server', 'nodex/0.2');
 	res.setHeader('X-Powered-By', 'node.js');
 	console.log(new Date() + ' - ' + req.url);
 	
@@ -84,6 +85,7 @@ http.createServer(function(req, res){
     		catch(e){
     		    //TODO: production: 404 dev: 500
     		    res.end("Error:" + e.message);
+    		    console.log(e.stack);
     		    return 0;
     		}
 	   });
@@ -112,39 +114,39 @@ utils = {
 
 view = {
     'render': function(filename,args){
+        app.res.end(view._render(filename,args,false));
+    },
+    'partial': function(filename, args){
+        return view._render(filename,args,true);
+    },
+    'header': function(filename, args){
+        return view._render(filename,args,false);
+    },
+    '_cache': {},
+    '_render': function(filename,args,forceFile){
+        args= args||{}; args.partial=this.partial;args.header=this.header;
         if(! filename){
             filename = __dirname+'/app/views/'+app.get.controller+'/'+app.get.action+'.html';
         }else{
             if(filename.lastIndexOf('.html')==-1) filename+='.html';
             filename = __dirname+'/app/views/'+filename; 
         }
-        console.log(filename);
-        if(typeof(args)=='undefined') args={};
-        args['render']=function(filename, args){ return view.render(filename, args); };
-        console.log(args);
-        
-        var fn = this._cache[ utils.md5(filename) ];
-        if(typeof fn == 'undefined'){
-            var it = this;
-            fs.readFile(filename,'utf8',function(err,ctx){
-                if(err) app.res.end(err.message);
-                fn = it.compile(ctx);
-                //it._cache[ utils.md5(filename) ] = fn;
-                return fn(args);
-            });  
-        }else{
-            return fn(args);
+        if(path.existsSync(filename)){
+            var ctx = fs.readFileSync(filename,'utf-8');
+            return this._compile(ctx)(args);
         }
+        else if(forceFile){ app.res.end('Error:'+ filename+ ' not exists.'); }
+        else { return ''; }
     },
-    'compile': function(ctx){
-        var code = "var out='"+ ctx.replace(/'/g,"\\'").
+    '_compile': function(ctx){
+        var code = "var out='"+ ctx.replace(/\('(.*)'\)/g,'("$1")').
+            replace(/'/g,"\\'").
             replace(/\{\{(.+?)\}\}/g,"'+it.$1+'").
             replace(/\s*<%(.+?)%>/g, "';$1 out+='").
             replace(/\n/g,"'+\"\\n\"+'") +"';return out;";        
-        console.log(code);return new Function();
+        //console.log(code);return new Function();
         return new Function('it',code);
-    },
-    '_cache': {}
+    }
 }
 
 
