@@ -14,9 +14,16 @@ exports.controller = {
         // app.dump(app.post);
         
         //app.dump(app.req.headers);
-        //app.dump(view._cache);
-        
-        $t = view.render('index/index', {'name':'nodex'});
-        app.res.end($t);
+        //console.log(view._cache);
+
+
+        app.render('index/index', {'name':'nodex'});
+    },
+    'view-cache': function(){
+        app.dump( view._cache );  
+    },
+    'clear-cache': function(){
+        view._cache = {};
+        app.res.end();
     }
 };

@@ -3,11 +3,16 @@ var port = 8888;
 var assets_dir = 'assets';
 
 app = {
+    'print': function(str){
+        this.res.write(str); 
+    },
+    'render': function(filename,args){ this.res.end(view.render(filename,args)); },
     'extend': function(parent, child){
         var parent = require('./_app/controllers/'+ parent)['controller'];
         for(i in parent){ if( typeof(child[i]) == "undefined") { child[i] = parent[i]; } }
         return child;
     },
+    'req':null, 'res':null,
     'dump': function(variables){ this.res.write( '<pre>'+ require('util').inspect(variables) + '</pre>' ); this.res.end(); },
     'redirect': function(url){ this.res.writeHeader(301, {"Location": url}); this.res.end(); }
 };
@@ -21,6 +26,7 @@ var http = require('http'),
 http.createServer(function(req, res){
 	res.setHeader('Server', 'nodex/0.2');
 	res.setHeader('X-Powered-By', 'node.js');
+    var startTimer = new Date();
 	console.log(new Date() + ' - ' + req.url);
 	
 	if(req.url=='/favicon.ico' || req.url.slice(1,7)=='assets'){
@@ -81,6 +87,7 @@ http.createServer(function(req, res){
         		controllers = require('./app/controllers/'+ app.get.controller)['controller'];
         		if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
         		controllers[ app.get.action ]();
+        		console.log('To run the program takes: '+ (new Date().getTime() - startTimer.getTime()));
     		}
     		catch(e){
     		    //TODO: production: 404 dev: 500
@@ -90,7 +97,6 @@ http.createServer(function(req, res){
     		}
 	   });
     }
-
 }).listen(port);
 console.log('Server running at port http://hostname:' + port);
 
@@ -109,12 +115,26 @@ var contentTypes = {
 
 utils = {
     'md5': function(ctx){ return require('crypto').createHash('md5').update(ctx).digest('hex'); },
-    'escapehtml': function( str ){ return str.replace(/[<>]/g,function(m){ return m=='>'?'&gt':'&lt' }); }
+    'escapehtml': function( str ){ return str.replace(/[<>]/g,function(m){ return m=='>'?'&gt':'&lt' }); },
+    'beget':function(obj){
+        var F = function(){};
+        F.prototype=obj;
+        return new F();
+    }
 }
 
 view = {
     'render': function(filename,args){
-        app.res.end(view._render(filename,args,false));
+        args= args||{};
+        if(args['layout']===false) {
+            return this._render(filename,args,false);
+        }
+        else{
+           if(args['layout']===undefined) args['layout']='layout.html';
+           bargs=utils.beget(args);
+           bargs['body'] = this._render(filename,args,false);
+           return this._render(args['layout'],bargs,false);
+        }  
     },
     'partial': function(filename, args){
         return view._render(filename,args,true);
@@ -124,6 +144,7 @@ view = {
     },
     '_cache': {},
     '_render': function(filename,args,forceFile){
+        console.log('render:'+filename);
         args= args||{}; args.partial=this.partial;args.header=this.header;
         if(! filename){
             filename = __dirname+'/app/views/'+app.get.controller+'/'+app.get.action+'.html';
@@ -131,12 +152,24 @@ view = {
             if(filename.lastIndexOf('.html')==-1) filename+='.html';
             filename = __dirname+'/app/views/'+filename; 
         }
-        if(path.existsSync(filename)){
-            var ctx = fs.readFileSync(filename,'utf-8');
-            return this._compile(ctx)(args);
+        
+        var cacheKey = utils.md5(filename);
+        fn = this._cache[ cacheKey ];
+        if(fn) return fn(args);
+        else{
+            if(path.existsSync(filename)){
+                var ctx = fs.readFileSync(filename,'utf-8');
+                fn = this._compile(ctx);
+                this._cache[ cacheKey ] = fn;
+                return fn(args);
+            }
+            else if(!forceFile) {
+                this._cache[ cacheKey ] = function(){return '';};
+                return ''; 
+            }
+            else { app.res.end('Error:'+ filename+ ' not exists.'); } 
         }
-        else if(forceFile){ app.res.end('Error:'+ filename+ ' not exists.'); }
-        else { return ''; }
+        
     },
     '_compile': function(ctx){
         var code = "var out='"+ ctx.replace(/\('(.*)'\)/g,'("$1")').
