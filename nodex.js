@@ -8,7 +8,7 @@ app = {
     },
     'render': function(filename,args){ this.res.end(view.render(filename,args)); },
     'extend': function(parent, child){
-        var parent = require('./_app/controllers/'+ parent)['controller'];
+        var parent = require('./app/controllers/'+ parent)['controller'];
         for(i in parent){ if( typeof(child[i]) == "undefined") { child[i] = parent[i]; } }
         return child;
     },
@@ -26,7 +26,8 @@ var http = require('http'),
 http.createServer(function(req, res){
 	res.setHeader('Server', 'nodex/0.2');
 	res.setHeader('X-Powered-By', 'node.js');
-    var startTimer = new Date();
+  
+  var startTimer = new Date();
 	console.log(new Date() + ' - ' + req.url);
 	
 	if(req.url=='/favicon.ico' || req.url.slice(1,7)=='assets'){
@@ -98,7 +99,7 @@ http.createServer(function(req, res){
 	   });
     }
 }).listen(port);
-console.log('Server running at port http://hostname:' + port);
+console.log('Server running at port ' + port);
 
 
 var contentTypes = {
@@ -118,14 +119,14 @@ utils = {
     'escapehtml': function( str ){ return str.replace(/[<>]/g,function(m){ return m=='>'?'&gt':'&lt' }); },
     'beget':function(obj){
         var F = function(){};
-        F.prototype=obj;
+        F.prototype = obj;
         return new F();
     }
 }
 
 view = {
     'render': function(filename,args){
-        args= args||{};
+        args = args || {};
         if(args['layout']===false) {
             return this._render(filename,args,false);
         }
@@ -164,10 +165,10 @@ view = {
                 return fn(args);
             }
             else if(!forceFile) {
-                this._cache[ cacheKey ] = function(){return '';};
+                this._cache[ cacheKey ] = function(){ return ''; };
                 return ''; 
             }
-            else { app.res.end('Error:'+ filename+ ' not exists.'); } 
+            else { app.res.end('Error:'+ filename + ' not exists.'); } 
         }
         
     },
