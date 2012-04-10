@@ -7,19 +7,15 @@ this.controller = {
         // console.log("root __construct init...");
     // },
     add: function (){
-        app.res.write("root:"+app.req.url);
-        app.res.end();
+      app.print("root:"+app.req.url);
     },
     list: function (){
-        app.res.write("root:"+app.req.url);
-        app.res.end();
+      app.print("root:"+app.req.url);
     },
     del: function (){
-        app.res.write("root:"+app.req.url);
-        app.res.end();
+      app.print("root:"+app.req.url);
     },
     update: function (){
-        app.res.write("root:"+app.req.url);
-        app.res.end();
+      app.print("root:"+app.req.url);
     }
 };

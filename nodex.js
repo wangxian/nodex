@@ -3,13 +3,7 @@ var port = 8888;
 var assets_dir = 'assets';
 
 app = {
-  'print': function(str){ this.res.write(str); },
-  'render': function(filename,args){ this.res.end(view.render(filename,args)); },
-  'extend': function(parent, child){
-    var parent = require('./app/controllers/'+ parent)['controller'];
-    for(i in parent){ if( typeof(child[i]) == "undefined") { child[i] = parent[i]; } }
-    return child;
-  },
+  'render': function(filename,args){ this.res.write(view.render(filename,args)); },
   'req':null, 'res':null,
   'md5': function(ctx){ return require('crypto').createHash('md5').update(ctx).digest('hex'); },
   'escapehtml': function( str ){ return str.replace(/[<>]/g,function(m){ return m=='>'?'&gt':'&lt' }); },
@@ -18,6 +12,13 @@ app = {
     F.prototype = obj;
     return new F();
   },
+  'extend': function(parent, child){
+    var parent = require('./app/controllers/'+ parent)['controller'];
+    var vchild = this.beget(parent);
+    for(i in child){ vchild[i] = child[i]; }
+    return vchild;
+  },
+  'print': function(str){ this.res.write(str); },
   'dump': function(variables){ this.res.write( '<pre>'+ require('util').inspect(variables) + '</pre>' ); this.res.end(); },
   'redirect': function(url){ this.res.writeHeader(301, {"Location": url}); this.res.end(); }
 };
@@ -94,7 +95,7 @@ http.createServer(function(req, res){
         if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
         controllers[ app.get.action ]();
         res.end();
-        console.log('To run the program takes: '+ (new Date().getTime() - startTimer.getTime()));
+        console.log('\u001b[31mTo run the program takes: '+ (new Date().getTime() - startTimer.getTime()) +'ms\u001b[0m');
       }
       catch(e){
         //TODO: production: 404 dev: 500
@@ -141,7 +142,7 @@ view = {
   },
   '_cache': {},
   '_render': function(filename,args,forceFile){
-    console.log('render:'+filename);
+    console.log('\u001b[36mRender view:'+filename+'\u001b[0m');
     args= args||{}; args.partial=this.partial;args.header=this.header;
     if(! filename){
       filename = __dirname+'/app/views/'+app.get.controller+'/'+app.get.action+'.html';
