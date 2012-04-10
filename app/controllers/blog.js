@@ -7,6 +7,7 @@ this.controller = app.extend('root', {
       app.redirect('http://www.qq.com');
     },
     del: function (){
+      //app.dump(this);
       app.print("blog:"+ app.req.url);
     }
 });

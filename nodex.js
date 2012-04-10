@@ -7,19 +7,13 @@ app = {
   'req':null, 'res':null,
   'md5': function(ctx){ return require('crypto').createHash('md5').update(ctx).digest('hex'); },
   'escapehtml': function( str ){ return str.replace(/[<>]/g,function(m){ return m=='>'?'&gt':'&lt' }); },
-  'beget':function(obj){
-    var F = function(){};
-    F.prototype = obj;
-    return new F();
-  },
+  'beget':function(obj){ var F = function(){}; F.prototype = obj; return new F();},
   'extend': function(parent, child){
     var parent = require('./app/controllers/'+ parent)['controller'];
-    var vchild = this.beget(parent);
-    for(i in child){ vchild[i] = child[i]; }
-    return vchild;
+    for(var A in parent){ if(!child.hasOwnProperty(A)){ child[A]=parent[A]; } } return child;
   },
   'print': function(str){ this.res.write(str); },
-  'dump': function(variables){ this.res.write( '<pre>'+ require('util').inspect(variables) + '</pre>' ); this.res.end(); },
+  'dump': function(variables){ this.res.write( '<pre>'+ require('util').inspect(variables) + '</pre>' ); },
   'redirect': function(url){ this.res.writeHeader(301, {"Location": url}); this.res.end(); }
 };
 var http = require('http'),
@@ -34,7 +28,7 @@ http.createServer(function(req, res){
   res.setHeader('X-Powered-By', 'node.js');
   
   var startTimer = new Date();
-  console.log(startTimer + ' - ' + req.url);
+  //console.log(startTimer + ' - ' + req.url);
   
   if(req.url=='/favicon.ico' || req.url.slice(1,7)=='assets'){
     var filename = __dirname + req.url.replace(/\.\./g,'');
@@ -129,7 +123,7 @@ view = {
     }
     else{
       if(args['layout']===undefined) args['layout']='layout.html';
-      bargs=app.beget(args);
+      bargs = app.beget(args);
       bargs['body'] = this._render(filename,args,false);
       return this._render(args['layout'],bargs,false);
     }  
