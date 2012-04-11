@@ -5,15 +5,79 @@ var assets_dir = 'assets';
 app = {
   'render': function(filename,args){ this.res.write(view.render(filename,args)); },
   'req':null, 'res':null,
+  'cookie':{
+    '_cookieGetData':'',
+    '_cookieSetData':[],
+    'get': function(name){
+      if(this._cookieGetData !=''){
+        var cookieString = app.req.headers.cookie || '';
+        this._cookieGetData = {};
+        var pairs = cookieString.split(";");
+        pairs.forEach(function (pair) {
+          var kv = pair.split("="); if(kv[0]) this._cookieGetData[kv[0]] = kv[1] || '';
+        });
+      }
+      return name ? (this._cookieGetData[name] || '') : this._cookieGetData;
+    },
+    'set': function(cookieObj){
+      /* {'name':'','value':'', 'expires':1334112331, 'path':'/', 'domain':'', 'secure':false, 'httponly':false} */
+      if(! cookieObj.name) throw new Error('In setCookie([object] cookieObj) ,cookieObj must has key "name"');
+      var cookieString = cookieObj.name +'='+  encodeURI(cookieObj.value||'');
+      
+      if(typeof cookieObj.expires != 'undefined'){ var now=new Date(); now.setTime( now.getTime() + cookieObj.expires*1000 ); cookieString += '; expires='+ now.toUTCString(); }
+      if(cookieObj.path){ cookieString += "; path="+ cookieObj.path; }
+      if(cookieObj.domain){ cookieString += "; domain="+ cookieObj.domain; }
+      if(cookieObj.secure){ cookieString += "; secure"; }
+      if(cookieObj.httponly){ cookieString += "; httponly"; }
+      
+      this._cookieSetData[this._cookieSetData.length] = cookieString;
+      app.res.setHeader('Set-Cookie', this._cookieSetData);
+    }
+  },
+  'session':{
+    '_start': false,
+    'session_name':'NODEXID',
+    'lifetime':1440,
+    '_sessions':{},
+    'session_id': function(){ return app.cookie.get(this.session_name); },
+    'start':function(){
+      var session_id = this.session_id();
+      if(session_id && this._sessions[session_id] ){
+        if(this._sessions[session_id].updated + this.lifetime*1000 <= new Date().getTime()){
+          this._sessions[session_id].updated = new Date().getTime(); return ;
+        }
+        else{ delete this._sessions[session_id]; }
+      }
+      
+      session_id = (1e13*Math.round(Math.random() * 10000) + new Date().getTime()).toString(32);
+      app.cookie.set({'name': this.session_name, 'value': session_id, 'path': '/', 'expires': (new Date().getTime() + 2592000000)}); 
+      this._sessions[session_id] = {'updated':new Date().getTime(),'data':{}};
+    },
+    'get':function(key){
+      var session_id = this.session_id();
+      if(this._sessions[session_id]){
+        return key ? ( this._sessions[session_id]['data'][key] || ''): this._sessions[session_id]['data'];
+      }
+      else return '';
+    },
+    'set':function(key,value){
+      this._sessions[this.session_id()]['data'][key] = value;
+    },
+    'delete':function(key){
+      delete this._sessions[this.session_id()]['data'][key];
+    },
+    'deleteAll': function(){ this._sessions[this.session_id()]['data']={}; }
+  },
   'md5': function(ctx){ return require('crypto').createHash('md5').update(ctx).digest('hex'); },
-  'escapehtml': function( str ){ return str.replace(/[<>]/g,function(m){ return m=='>'?'&gt':'&lt' }); },
   'beget':function(obj){ var F = function(){}; F.prototype = obj; return new F();},
   'extend': function(parent, child){
     var parent = require('./app/controllers/'+ parent)['controller'];
-    for(var A in parent){ if(!child.hasOwnProperty(A)){ child[A]=parent[A]; } } return child;
+    var vchild = this.beget(parent); for(var A in child){ vchild[A] = child[A]; } return vchild;
   },
   'print': function(str){ this.res.write(str); },
   'dump': function(variables){ this.res.write( '<pre>'+ require('util').inspect(variables) + '</pre>' ); },
+  'encodeHTML': function (A){return String(A).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")},
+  'decodeHTML': function (B){var A=String(B).replace(/&quot;/g,'"').replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&");return A.replace(/&#([\d]+);/g,function(C,D){return String.fromCharCode(parseInt(D,10))})},
   'redirect': function(url){ this.res.writeHeader(301, {"Location": url}); this.res.end(); }
 };
 var http = require('http'),
@@ -83,7 +147,7 @@ http.createServer(function(req, res){
       app.get['querypath'] = controller_action;
       app.req = req;
       app.res = res;
-      
+            
       try{
         controllers = require('./app/controllers/'+ app.get.controller)['controller'];
         if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
