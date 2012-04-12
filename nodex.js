@@ -1,10 +1,15 @@
 
-var port = 8888;
-var assets_dir = 'assets';
+appconfig = {
+  'PORT': 8888,
+  'APP_PATH': './app'
+}
 
+
+/*----------------------------+ Server below, Don't modify!+----------------------------*/
 app = {
-  'render': function(filename,args){ this.res.write(view.render(filename,args)); },
+  'render': function(filename,args){ this.res.end(view.render(filename,args)); },
   'req':null, 'res':null,
+  '_postData': '',
   'cookie':{
     '_cookieGetData':'',
     '_cookieSetData':[],
@@ -72,111 +77,9 @@ app = {
     var parent = require('./app/controllers/'+ parent)['controller'];
     var vchild = this.beget(parent); for(var A in child){ vchild[A] = child[A]; } return vchild;
   },
-  'print': function(str){ this.res.write(str); },
-  'dump': function(variables){ this.res.write( '<pre>'+ require('util').inspect(variables) + '</pre>' ); },
   'encodeHTML': function (A){return String(A).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")},
   'decodeHTML': function (B){var A=String(B).replace(/&quot;/g,'"').replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&");return A.replace(/&#([\d]+);/g,function(C,D){return String.fromCharCode(parseInt(D,10))})},
   'redirect': function(url){ this.res.writeHeader(301, {"Location": url}); this.res.end(); }
-};
-var http = require('http'),
-  fs   = require('fs'),
-  path = require('path'),
-  url  = require('url'),
-  zlib = require('zlib'),
-  querystring = require('querystring');
-
-http.createServer(function(req, res){
-  res.setHeader('Server', 'nodex/0.2');
-  res.setHeader('X-Powered-By', 'node.js');
-  
-  var startTimer = new Date();
-  //console.log(startTimer + ' - ' + req.url);
-  
-  if(req.url=='/favicon.ico' || req.url.slice(1,7)=='assets'){
-    var filename = __dirname + req.url.replace(/\.\./g,'');
-    fs.stat(filename, function(error, stat){
-       if(error) { 
-         res.writeHead(500, {'content-type': 'text/plain'});
-         res.end('404 File Not Found.');
-       }else{
-         var lastModified = stat.mtime.toUTCString();
-         res.setHeader("Last-Modified", lastModified);
-         if (req.headers['if-modified-since'] && lastModified == req.headers['if-modified-since']) {
-          res.writeHead(304, "Not Modified");
-          res.end();
-        }else{
-          res.setHeader('Content-Type', contentTypes[ filename.slice(filename.lastIndexOf('.')+1) ] || 'text/plain');
-          
-          if(/\.(gif|png|jpg|js|css)$/i.test(filename)){
-            var expires = new Date();
-            expires.setTime( expires.getTime() + (86400000 * 15) );
-            res.setHeader("Expires",  expires.toUTCString());
-            res.setHeader("Cache-Control", "max-age="+ (86400 * 15));
-          }
-          
-          var raw = fs.createReadStream(filename);
-          var acceptEncoding = req.headers['accept-encoding'] || '';
-          var matched = /\.(html|js|css)$/i.test(filename);
-          if(matched && /\bgzip\b/.test(acceptEncoding)){
-            res.writeHead(200, {'Content-Encoding': 'gzip'});
-            raw.pipe(zlib.createGzip()).pipe(res);
-          }else if(matched && /\bdeflate\b/.test(acceptEncoding)){
-            res.writeHead(200, {'Content-Encoding': 'deflate'});
-            raw.pipe(zlib.createDeflate()).pipe(res);
-          }else{
-            res.writeHead(200);
-            raw.pipe(res);
-          }
-        }
-       }
-    });
-  }else{
-    var _postData = '';
-    req.on('data', function(chunk){
-      _postData += chunk;
-    }).on('end', function(){
-      app.post = querystring.parse(_postData);
-      var rx = url.parse(req.url, true);
-      var controller_action = rx.pathname.slice(1).split('/');
-      
-      app.get = rx.query;
-      app.get['controller'] = controller_action[0] ? controller_action.shift() : 'index';
-      app.get['action'] = controller_action[0] ? controller_action.shift() : 'index';
-      app.get['querypath'] = controller_action;
-      app.req = req;
-      app.res = res;
-      app.cookie._cookieGetData='';
-      app.cookie._cookieSetData=[];
-            
-      try{
-        controllers = require('./app/controllers/'+ app.get.controller)['controller'];
-        if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
-        controllers[ app.get.action ]();
-        res.end();
-        console.log('\u001b[31mTo run the program takes: '+ (new Date().getTime() - startTimer.getTime()) +'ms\u001b[0m');
-      }
-      catch(e){
-        //TODO: production: 404 dev: 500
-        res.end("Error:" + e.message);
-        console.log(e.stack);
-        return 0;
-      }
-    });
-  }
-}).listen(port);
-console.log('Server running at port ' + port);
-
-/* static mime type */
-var contentTypes = {
-  "avi": "video/x-msvideo","rar": "application/x-rar-compressed",
-  "css": "text/css", "deb": "application/x-debian-package","doc": "application/msword",
-  "flv": "video/x-flv", "gif": "image/gif","gz": "application/x-gzip", "html": "text/html", 
-  "jar": "application/java-archive", "jpeg": "image/jpeg", "jpg": "image/jpeg", 
-  "js": "text/javascript", "json": "application/json",'ico': 'image/x-icon',"midi": "audio/midi","mime": "www/mime", 
-  "mp4": "video/mp4", "pdf": "application/pdf","png": "image/png", "rtf": "text/rtf", "swf": "application/x-shockwave-flash",
-  "tar": "application/x-tar", "tgz": "application/x-tar-gz", "txt": "text/plain",
-  "wav": "audio/x-wav", "wma": "audio/x-ms-wma","wmv": "video/x-ms-wmv", "xml": "text/xml",
-  "zip": "application/zip", "undefined": "application/octet-stream"
 };
 
 /* nodex template */
@@ -239,7 +142,124 @@ view = {
   }
 }
 
+/**
+ * print some information
+ * @param sting|buffer data
+ * @param string encoding charset,utf8,gbk
+ */
+print = function(data, encoding){ app.res.write(data, encoding); };
+
+/**
+ * print object\string\boolean\number\null
+ * @param mixed data
+ */
+dump  = function(data){ app.res.write( '<pre>'+ require('util').inspect(data) + '</pre>' ); };
+
+/* static mime type */
+var contentTypes = {
+  "avi": "video/x-msvideo","rar": "application/x-rar-compressed",
+  "css": "text/css", "deb": "application/x-debian-package","doc": "application/msword",
+  "flv": "video/x-flv", "gif": "image/gif","gz": "application/x-gzip", "html": "text/html", 
+  "jar": "application/java-archive", "jpeg": "image/jpeg", "jpg": "image/jpeg", 
+  "js": "text/javascript", "json": "application/json",'ico': 'image/x-icon',"midi": "audio/midi","mime": "www/mime", 
+  "mp4": "video/mp4", "pdf": "application/pdf","png": "image/png", "rtf": "text/rtf", "swf": "application/x-shockwave-flash",
+  "tar": "application/x-tar", "tgz": "application/x-tar-gz", "txt": "text/plain",
+  "wav": "audio/x-wav", "wma": "audio/x-ms-wma","wmv": "video/x-ms-wmv", "xml": "text/xml",
+  "zip": "application/zip", "undefined": "application/octet-stream"
+};
+
 /* store user's session data */
 var _sessionData = {}
+
+var http = require('http'),
+    fs   = require('fs'),
+    path = require('path'),
+    url  = require('url'),
+    zlib = require('zlib'),
+    querystring = require('querystring');
+
+/* HTTP Server */
+http.createServer(function(req, res){
+  res.setHeader('Server', 'nodex/0.2');
+  res.setHeader('X-Powered-By', 'node.js');
+  
+  var startTimer = new Date();
+  //console.log(startTimer + ' - ' + req.url);
+  
+  if(req.url.slice(1,7) == 'assets' || req.url == '/favicon.ico'){
+    var filename = __dirname + req.url.replace(/\.\./g,'');
+    fs.stat(filename, function(error, stat){
+       if(error) {
+         res.writeHead(500, {'content-type': 'text/plain'});
+         res.end('404 File Not Found.');
+       }else{
+         var lastModified = stat.mtime.toUTCString();
+         res.setHeader("Last-Modified", lastModified);
+         if (req.headers['if-modified-since'] && lastModified == req.headers['if-modified-since']) {
+          res.writeHead(304, "Not Modified");
+          res.end();
+        }else{
+          res.setHeader('Content-Type', contentTypes[ filename.slice(filename.lastIndexOf('.')+1) ] || 'text/plain');
+          
+          if(/\.(gif|png|jpg|js|css)$/i.test(filename)){
+            var expires = new Date();
+            expires.setTime( expires.getTime() + (86400000 * 15) );
+            res.setHeader("Expires",  expires.toUTCString());
+            res.setHeader("Cache-Control", "max-age="+ (86400 * 15));
+          }
+          
+          var raw = fs.createReadStream(filename);
+          var acceptEncoding = req.headers['accept-encoding'] || '';
+          var matched = /\.(html|js|css)$/i.test(filename);
+          if(matched && /\bgzip\b/.test(acceptEncoding)){
+            res.writeHead(200, {'Content-Encoding': 'gzip'});
+            raw.pipe(zlib.createGzip()).pipe(res);
+          }else if(matched && /\bdeflate\b/.test(acceptEncoding)){
+            res.writeHead(200, {'Content-Encoding': 'deflate'});
+            raw.pipe(zlib.createDeflate()).pipe(res);
+          }else{
+            res.writeHead(200);
+            raw.pipe(res);
+          }
+        }
+       }
+    });
+  }
+  else{
+    app._postData = '';
+    if(req.method =='POST'){
+      req.on('data', function(chunk){ app._postData += chunk; }).on('end', function(){
+        app.post = querystring.parse(app._postData);
+      });
+    }
+    
+    var rx = url.parse(req.url, true);
+    var controller_action = rx.pathname.slice(1).split('/');
+    
+    app.get = rx.query;
+    app.get['controller'] = controller_action[0] ? controller_action.shift() : 'index';
+    app.get['action'] = controller_action[0] ? controller_action.shift() : 'index';
+    app.get['querypath'] = controller_action;
+    app.req = req;
+    app.res = res;
+    app.cookie._cookieGetData='';
+    app.cookie._cookieSetData=[];
+          
+    try{
+      controllers = require('./app/controllers/'+ app.get.controller)['controller'];
+      if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
+      controllers[ app.get.action ]();
+      if( typeof(controllers['__destructor']) == "function" ) controllers['__destructor']();
+      console.log('\u001b[31mTo run the program takes: '+ (new Date().getTime() - startTimer.getTime()) +'ms\u001b[0m');
+    }
+    catch(e){
+      //TODO: production: 404 dev: 500
+      res.end("Error:" + e.message);
+      console.log(e.stack);
+      return 0;
+    }
+  }
+}).listen(appconfig.PORT);
+console.log('Server running at port ' + appconfig.PORT);
 
 

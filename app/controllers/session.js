@@ -4,16 +4,19 @@
 
 exports.controller = {
     'index': function(){
-      app.session.set('name','wangxian');
+      app.session.set('now',new Date());
+      app.res.end();
     },
     'get':function(){
-      app.dump( app.session.get() );
+      dump( app.session.get() );
+      app.res.end();
     },
     'all-client':function(){
       // 获取所有 人 的session
-      app.dump( app.session.gods() );
+      dump( app.session.gods() );
+      app.res.end();
     },
     'session_id':function(){
-      app.print( (1e13*Math.round(Math.random() * 10000) + new Date().getTime()).toString(32) );
+      app.res.end( (1e13*Math.round(Math.random() * 10000) + new Date().getTime()).toString(32) );
     },
 };

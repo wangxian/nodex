@@ -8,16 +8,19 @@ this.controller = {
     // },
     add: function (){
       app.res.writeHead(200, {'content-type':'text/html'});
-      app.print( app.encodeHTML('<html></html>') );
-      app.print("root:"+app.req.url);
+      print( app.encodeHTML('<html></html>') );
+      print("root:"+ app.req.url);
     },
     list: function (){
-      app.print("root:"+app.req.url);
+      print("root:"+app.req.url);
     },
     del: function (){
-      app.print("root:"+app.req.url);
+      print("root:"+app.req.url);
     },
     update: function (){
-      app.print("root:"+app.req.url);
+      print("root:"+app.req.url);
+    },
+    '__destructor': function(){
+      app.res.end();
     }
 };

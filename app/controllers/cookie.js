@@ -19,9 +19,11 @@ this.controller = app.extend('root', {
      // app.cookie.set( {name:'bb',value:'bb',expires:320} );
      // app.cookie.set( {name:'bb', expires: -320} ); // cookie bb is deleted
      
-     // app.dump(app.req.headers);
+     // dump(app.req.headers);
+     app.res.end();
   },
   'get':function(){
-    app.dump(app.cookie.get());
+    dump(app.cookie.get());
+    app.res.end();
   }
 });

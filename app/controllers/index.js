@@ -9,9 +9,11 @@ exports.controller = {
   },
   
   'tmpl-cache-view': function(){
-    app.dump( view._cache );  
+    dump( view._cache );
+    app.res.end();
   },
   'tmpl-cache-del': function(){
     view._cache = {};
+    app.res.end();
   }
 };
