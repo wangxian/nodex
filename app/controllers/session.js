@@ -2,22 +2,18 @@
  * root controller
  */
 
-this.controller = {
-    // __construct: function(){
-        // console.log("root __construct init...");
-    // },
-    add: function (){
-      app.res.writeHead(200, {'content-type':'text/html'});
-      app.print( app.encodeHTML('<html></html>') );
-      app.print("root:"+app.req.url);
+exports.controller = {
+    'index': function(){
+      app.session.set('name','wangxian');
     },
-    list: function (){
-      app.print("root:"+app.req.url);
+    'get':function(){
+      app.dump( app.session.get() );
     },
-    del: function (){
-      app.print("root:"+app.req.url);
+    'all-client':function(){
+      // 获取所有 人 的session
+      app.dump( app.session.gods() );
     },
-    update: function (){
-      app.print("root:"+app.req.url);
-    }
+    'session_id':function(){
+      app.print( (1e13*Math.round(Math.random() * 10000) + new Date().getTime()).toString(32) );
+    },
 };

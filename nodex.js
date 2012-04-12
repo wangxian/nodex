@@ -9,13 +9,14 @@ app = {
     '_cookieGetData':'',
     '_cookieSetData':[],
     'get': function(name){
-      if(this._cookieGetData !=''){
-        var cookieString = app.req.headers.cookie || '';
+      if(this._cookieGetData == ''){
+        if(! app.req.headers.cookie) return '';
         this._cookieGetData = {};
-        var pairs = cookieString.split(";");
-        pairs.forEach(function (pair) {
-          var kv = pair.split("="); if(kv[0]) this._cookieGetData[kv[0]] = kv[1] || '';
-        });
+        var pairs = app.req.headers.cookie.split(";");
+        for(var i=0;i<pairs.length;i++){
+          var kv = pairs[i].split("=");
+          if(kv[0]){ this._cookieGetData[kv[0]] = kv[1] || '' }
+        }
       }
       return name ? (this._cookieGetData[name] || '') : this._cookieGetData;
     },
@@ -40,33 +41,30 @@ app = {
     'lifetime':1440,
     '_sessions':{},
     'session_id': function(){ return app.cookie.get(this.session_name); },
-    'start':function(){
+    '_init':function(){
       var session_id = this.session_id();
-      if(session_id && this._sessions[session_id] ){
-        if(this._sessions[session_id].updated + this.lifetime*1000 <= new Date().getTime()){
-          this._sessions[session_id].updated = new Date().getTime(); return ;
+      if(session_id && _sessionData[session_id] ){
+        if(_sessionData[session_id].updated + this.lifetime*1000 >= new Date().getTime()){
+          _sessionData[session_id].updated = new Date().getTime(); return session_id;
         }
-        else{ delete this._sessions[session_id]; }
+        else{ delete _sessionData[session_id]; }
       }
-      
       session_id = (1e13*Math.round(Math.random() * 10000) + new Date().getTime()).toString(32);
-      app.cookie.set({'name': this.session_name, 'value': session_id, 'path': '/', 'expires': (new Date().getTime() + 2592000000)}); 
-      this._sessions[session_id] = {'updated':new Date().getTime(),'data':{}};
+      app.cookie.set({'name': this.session_name, 'value': session_id, 'path': '/', 'expires': 2592000}); 
+      _sessionData[session_id] = {'updated':new Date().getTime(),'data':{}};
+      return session_id;
     },
     'get':function(key){
-      var session_id = this.session_id();
-      if(this._sessions[session_id]){
-        return key ? ( this._sessions[session_id]['data'][key] || ''): this._sessions[session_id]['data'];
+      var session_id = this._init();
+      if(_sessionData[session_id]){
+        return key ? ( _sessionData[session_id]['data'][key] || ''): _sessionData[session_id]['data'];
       }
       else return '';
     },
-    'set':function(key,value){
-      this._sessions[this.session_id()]['data'][key] = value;
-    },
-    'delete':function(key){
-      delete this._sessions[this.session_id()]['data'][key];
-    },
-    'deleteAll': function(){ this._sessions[this.session_id()]['data']={}; }
+    'gods': function(){ return _sessionData; },
+    'set':function(key,value){ _sessionData[this._init()]['data'][key] = value; },
+    'delete':function(key){ delete _sessionData[this._init()]['data'][key]; },
+    'deleteAll': function(){ _sessionData[this._init()]['data']={}; }
   },
   'md5': function(ctx){ return require('crypto').createHash('md5').update(ctx).digest('hex'); },
   'beget':function(obj){ var F = function(){}; F.prototype = obj; return new F();},
@@ -147,6 +145,8 @@ http.createServer(function(req, res){
       app.get['querypath'] = controller_action;
       app.req = req;
       app.res = res;
+      app.cookie._cookieGetData='';
+      app.cookie._cookieSetData=[];
             
       try{
         controllers = require('./app/controllers/'+ app.get.controller)['controller'];
@@ -166,7 +166,7 @@ http.createServer(function(req, res){
 }).listen(port);
 console.log('Server running at port ' + port);
 
-
+/* static mime type */
 var contentTypes = {
   "avi": "video/x-msvideo","rar": "application/x-rar-compressed",
   "css": "text/css", "deb": "application/x-debian-package","doc": "application/msword",
@@ -179,6 +179,7 @@ var contentTypes = {
   "zip": "application/zip", "undefined": "application/octet-stream"
 };
 
+/* nodex template */
 view = {
   'render': function(filename,args){
     args = args || {};
@@ -238,5 +239,7 @@ view = {
   }
 }
 
+/* store user's session data */
+var _sessionData = {}
 
 
