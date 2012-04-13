@@ -1,15 +1,13 @@
+/*!
+ * NodeX Server
+ * Project start: 2012.3.12
+ * Copyright(c) 2010 WangXian <xian366@gmail.com>
+ * MIT Licensed
+ */
 
-appconfig = {
-  'PORT': 8888,
-  'APP_PATH': './app'
-}
-
-
-/*----------------------------+ Server below, Don't modify!+----------------------------*/
 app = {
+  'req':null, 'res':null, 'config':{}, '_postData': '',
   'render': function(filename,args){ this.res.end(view.render(filename,args)); },
-  'req':null, 'res':null,
-  '_postData': '',
   'cookie':{
     '_cookieGetData':'',
     '_cookieSetData':[],
@@ -74,7 +72,7 @@ app = {
   'md5': function(ctx){ return require('crypto').createHash('md5').update(ctx).digest('hex'); },
   'beget':function(obj){ var F = function(){}; F.prototype = obj; return new F();},
   'extend': function(parent, child){
-    var parent = require('./app/controllers/'+ parent)['controller'];
+    var parent = require(__dirname+'/app/controllers/'+ parent)['controller'];
     var vchild = this.beget(parent); for(var A in child){ vchild[A] = child[A]; } return vchild;
   },
   'encodeHTML': function (A){return String(A).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")},
@@ -151,9 +149,9 @@ print = function(data, encoding){ app.res.write(data, encoding); };
 
 /**
  * print object\string\boolean\number\null
- * @param mixed data
+ * @param array args...
  */
-dump  = function(data){ app.res.write( '<pre>'+ require('util').inspect(data) + '</pre>' ); };
+dump  = function(){ for(var i=0;i<arguments.length;i++){  app.res.write( '<pre>'+ require('util').inspect(arguments[i]) + '</pre>');  } };
 
 /* static mime type */
 var contentTypes = {
@@ -178,88 +176,95 @@ var http = require('http'),
     zlib = require('zlib'),
     querystring = require('querystring');
 
-/* HTTP Server */
-http.createServer(function(req, res){
-  res.setHeader('Server', 'nodex/0.2');
-  res.setHeader('X-Powered-By', 'node.js');
-  
-  var startTimer = new Date();
-  //console.log(startTimer + ' - ' + req.url);
-  
-  if(req.url.slice(1,7) == 'assets' || req.url == '/favicon.ico'){
-    var filename = __dirname + req.url.replace(/\.\./g,'');
-    fs.stat(filename, function(error, stat){
-       if(error) {
-         res.writeHead(500, {'content-type': 'text/plain'});
-         res.end('404 File Not Found.');
-       }else{
-         var lastModified = stat.mtime.toUTCString();
-         res.setHeader("Last-Modified", lastModified);
-         if (req.headers['if-modified-since'] && lastModified == req.headers['if-modified-since']) {
-          res.writeHead(304, "Not Modified");
-          res.end();
-        }else{
-          res.setHeader('Content-Type', contentTypes[ filename.slice(filename.lastIndexOf('.')+1) ] || 'text/plain');
-          
-          if(/\.(gif|png|jpg|js|css)$/i.test(filename)){
-            var expires = new Date();
-            expires.setTime( expires.getTime() + (86400000 * 15) );
-            res.setHeader("Expires",  expires.toUTCString());
-            res.setHeader("Cache-Control", "max-age="+ (86400 * 15));
+module.exports = {
+  'configure': function(config){
+    app.config = config;
+    return this;
+  },
+  'run': function(){
+    /*------------------------------+ Http Server +------------------------------*/
+    http.createServer(function(req, res){
+      res.setHeader('Server', 'nodex/0.2');
+      res.setHeader('X-Powered-By', 'node.js');
+      
+      var startTimer = new Date();
+      console.log(startTimer + ' - ' + req.url);
+      
+      if(req.url.slice(1,7) == 'assets' || req.url == '/favicon.ico'){
+        var filename = __dirname + req.url.replace(/\.\./g,'');
+        fs.stat(filename, function(error, stat){
+           if(error) {
+             res.writeHead(500, {'content-type': 'text/plain'});
+             res.end('404 File Not Found.');
+           }else{
+             var lastModified = stat.mtime.toUTCString();
+             res.setHeader("Last-Modified", lastModified);
+             if (req.headers['if-modified-since'] && lastModified == req.headers['if-modified-since']) {
+              res.writeHead(304, "Not Modified");
+              res.end();
+            }else{
+              res.setHeader('Content-Type', contentTypes[ filename.slice(filename.lastIndexOf('.')+1) ] || 'text/plain');
+              
+              if(/\.(gif|png|jpg|js|css)$/i.test(filename)){
+                var expires = new Date();
+                expires.setTime( expires.getTime() + (86400000 * 15) );
+                res.setHeader("Expires",  expires.toUTCString());
+                res.setHeader("Cache-Control", "max-age="+ (86400 * 15));
+              }
+              
+              var raw = fs.createReadStream(filename);
+              var acceptEncoding = req.headers['accept-encoding'] || '';
+              var matched = /\.(html|js|css)$/i.test(filename);
+              if(matched && /\bgzip\b/.test(acceptEncoding)){
+                res.writeHead(200, {'Content-Encoding': 'gzip'});
+                raw.pipe(zlib.createGzip()).pipe(res);
+              }else if(matched && /\bdeflate\b/.test(acceptEncoding)){
+                res.writeHead(200, {'Content-Encoding': 'deflate'});
+                raw.pipe(zlib.createDeflate()).pipe(res);
+              }else{
+                res.writeHead(200);
+                raw.pipe(res);
+              }
+            }
+           }
+        });
+      }
+      else{
+        var rx = url.parse(req.url, true);
+        var controller_action = rx.pathname.slice(1).split('/');
+        
+        app.get = rx.query;
+        app.get['controller'] = controller_action[0] ? controller_action.shift() : 'index';
+        app.get['action'] = controller_action[0] ? controller_action.shift() : 'index';
+        app.get['querypath'] = controller_action;
+        app.req = req;
+        app.res = res;
+        app.cookie._cookieGetData='';
+        app.cookie._cookieSetData=[];
+        app._postData = '';
+        
+        req.on('data', function(chunk){ app._postData += chunk; }).on('end', function(){
+          app.post = querystring.parse(app._postData);
+          try{
+            controllers = require(__dirname+'/app/controllers/'+ app.get.controller +'.js')['controller'];
+            if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
+            controllers[ app.get.action ]();
+            if( typeof(controllers['__destructor']) == "function" ) controllers['__destructor']();
+            console.log('\u001b[31mThe operation cost : '+ (new Date().getTime() - startTimer.getTime()) +'ms\u001b[0m');
           }
-          
-          var raw = fs.createReadStream(filename);
-          var acceptEncoding = req.headers['accept-encoding'] || '';
-          var matched = /\.(html|js|css)$/i.test(filename);
-          if(matched && /\bgzip\b/.test(acceptEncoding)){
-            res.writeHead(200, {'Content-Encoding': 'gzip'});
-            raw.pipe(zlib.createGzip()).pipe(res);
-          }else if(matched && /\bdeflate\b/.test(acceptEncoding)){
-            res.writeHead(200, {'Content-Encoding': 'deflate'});
-            raw.pipe(zlib.createDeflate()).pipe(res);
-          }else{
-            res.writeHead(200);
-            raw.pipe(res);
+          catch(e){
+            //TODO: production: 404 dev: 500
+            res.end("Error:" + e.message);
+            console.log(e.stack);
+            return 0;
           }
-        }
-       }
-    });
+        });
+      }
+    }).listen(app.config.PORT);
+    console.log('Server running at port ' + app.config.PORT);
+    /*------------------------------+ Http Server +------------------------------*/
   }
-  else{
-    app._postData = '';
-    if(req.method =='POST'){
-      req.on('data', function(chunk){ app._postData += chunk; }).on('end', function(){
-        app.post = querystring.parse(app._postData);
-      });
-    }
-    
-    var rx = url.parse(req.url, true);
-    var controller_action = rx.pathname.slice(1).split('/');
-    
-    app.get = rx.query;
-    app.get['controller'] = controller_action[0] ? controller_action.shift() : 'index';
-    app.get['action'] = controller_action[0] ? controller_action.shift() : 'index';
-    app.get['querypath'] = controller_action;
-    app.req = req;
-    app.res = res;
-    app.cookie._cookieGetData='';
-    app.cookie._cookieSetData=[];
-          
-    try{
-      controllers = require('./app/controllers/'+ app.get.controller)['controller'];
-      if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
-      controllers[ app.get.action ]();
-      if( typeof(controllers['__destructor']) == "function" ) controllers['__destructor']();
-      console.log('\u001b[31mTo run the program takes: '+ (new Date().getTime() - startTimer.getTime()) +'ms\u001b[0m');
-    }
-    catch(e){
-      //TODO: production: 404 dev: 500
-      res.end("Error:" + e.message);
-      console.log(e.stack);
-      return 0;
-    }
-  }
-}).listen(appconfig.PORT);
-console.log('Server running at port ' + appconfig.PORT);
+};
+
 
 
