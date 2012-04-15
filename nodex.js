@@ -250,7 +250,7 @@ module.exports = {
             if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
             controllers[ app.get.action ]();
             if( typeof(controllers['__destructor']) == "function" ) controllers['__destructor']();
-            console.log('\u001b[31mThe operation cost : '+ (new Date().getTime() - startTimer.getTime()) +'ms\u001b[0m');
+            console.log('\u001b[31mThe operation cost:'+ (new Date().getTime() - startTimer.getTime()) +'ms\u001b[0m');
           }
           catch(e){
             //TODO: production: 404 dev: 500
