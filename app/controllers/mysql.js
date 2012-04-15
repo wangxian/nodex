@@ -2,6 +2,10 @@
  * mysql 测试
  */
 
+var mysql = require('mysql');
+client = mysql.createClient({ user: 'root', password: '111111',});
+client.useDatabase('todo');
+
 this.controller = {
   'index': function(){
     
@@ -26,6 +30,8 @@ this.controller = {
       function(err,results,fields){
         if(err) dump(err);
         dump(results);
+        // client.end();
+        
         app.res.end();
       }
     );
@@ -35,6 +41,8 @@ this.controller = {
     client.query('delete from todo where id>17', function(err,info){
       if(err) dump(err);
       dump(info);
+      // client.end();
+      
       app.res.end();
     });
   },
