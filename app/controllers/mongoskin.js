@@ -40,12 +40,17 @@ controller.index = function(){
        // this.remove({tags:tag},fn);
      // }
   // });
-  var db = mongo.db('localhost:27017/test');
+  var db = mongo.db('localhost:27017/user');
   db.bind('user');
-  db.user.find().toArray(function(err, items){
-    dump(items);
-    app.res.end();
+  
+  db.user.save({'name':'wx'}, function(err, info){
+    console.dir(info);
   });
+  
+  db.user.find({}).sort({_id:1}).toArray(function(err, items){
+    // console.dir(items);
+  });
+  app.res.end();
   
   // db.user.save({name:'wx', time: new Date()}, function(err,info){
     // console.log(info);

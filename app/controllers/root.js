@@ -12,6 +12,7 @@ this.controller = {
       print("root:"+ app.req.url);
     },
     list: function (){
+      // dump(require.cache);
       print("root:"+app.req.url);
     },
     del: function (){
