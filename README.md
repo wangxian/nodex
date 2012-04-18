@@ -2,7 +2,7 @@
 
 @version: v0.3 preview
 
-Fast 、Simpleness (only one file ,run it) web framework for <a href="http://nodejs.org/">node</a>.
+Fast 、Simpleness (only one file ,run it) web framework for <a href="http://nodejs.org/" target="_blank">node</a>.
 
 You can easily modify it.
 

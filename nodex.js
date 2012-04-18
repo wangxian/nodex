@@ -184,7 +184,7 @@ module.exports = {
   'run': function(){
     /*------------------------------+ Http Server +------------------------------*/
     http.createServer(function(req, res){
-      res.setHeader('Server', 'nodex/0.2');
+      res.setHeader('Server', 'NodeX/0.3');
       res.setHeader('X-Powered-By', 'node.js');
       
       var startTimer = new Date();

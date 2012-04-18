@@ -1,0 +1,18 @@
+{
+  "name": "nodex",
+  "version": "0.3preview",
+  "description": "Fast 、Simpleness (only one file ,run it) web framework for nodejs .",
+  "homepage": "https://github.com/wangxian/nodex",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/wangxian/nodex.git"
+  },
+  "author": "WangXian <xian366@gmail.com> (http://blog.loopx.cn)",
+  "main": "./nodex.js",
+  "keywords": ["framework", "web", "javascript", "rest", "restful"],
+  "engines": { "node": ">=0.6.10" },
+  "licenses": [{
+    "type": "MIT",
+    "url": "http://github.com/jashkenas/coffee-script/raw/master/LICENSE"
+  }]
+}
