@@ -12,15 +12,18 @@ You can easily modify it.
 
     npm install nodex
 
-**Clone it from github**
+## Quick start
+
+**Clone folder & files from github**
 
     git clone git://github.com/wangxian/nodex.git
 
-## Quick start
+Then go to root directory, run server
 
-```javascript
+```
 node server.js
 ```
+
 And then view http://localhost:8888/ , you can find server is running .
 port is 8888, You can modify file config.js , ```PORT: 8888```
 
