@@ -78,7 +78,7 @@ app = {
   },
   'encodeHTML': function (A){return String(A).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")},
   'decodeHTML': function (B){var A=String(B).replace(/&quot;/g,'"').replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&");return A.replace(/&#([\d]+);/g,function(C,D){return String.fromCharCode(parseInt(D,10))})},
-  'redirect': function(url){ this.res.writeHeader(301, {"Location": url}); this.res.end(); }
+  'redirect': function(url){ this.res.writeHeader(302, {"Location": url}); this.res.end(); }
 };
 
 /* nodex template */
@@ -138,7 +138,7 @@ view = {
       ctx.replace(/\\/g,"\\\\").
       replace(/'/g, "\\'").
       replace(/\{\{(.+?)\}\}/g, function(m,nmatch){
-        return "'+it."+ nmatch.replace(/\\/g,'') +"+'";
+        return "'+"+ nmatch.replace(/\\/g,'') +"+'";
       }).
       replace(/\s*<%(.+?)%>/g, "';$1 out+='").
       replace(/\n/g,"'+\"\\n\"+'") +"';return out;";    

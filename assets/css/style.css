@@ -48,3 +48,4 @@ a:hover { color:#FF3300; }
     .foot { border-top:1px solid #CCC; color:#666; padding-top:10px; font-size:11px; }
         .foot img { vertical-align:top; }
 
+.finished span{ color:#BBB; }

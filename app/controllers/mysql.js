@@ -1,5 +1,6 @@
 /**
  * mysql 测试
+ * https://github.com/felixge/node-mysql
  */
 
 var mysql = require('mysql');
@@ -11,7 +12,7 @@ this.controller = {
     
     client.query(
       'SELECT * FROM todo', function (err, results, fields) {
-        if (err) { print(err.message); }
+        if (err) { app.end(err.message); }
     
         // dump(results[0].post_date.getTime());
         dump(results);
