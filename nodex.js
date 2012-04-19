@@ -7,7 +7,7 @@
 
 app = {
   'req':null, 'res':null, 'config':{}, '_postData': '',
-  'end': function(){ this.res.end(); },
+  'end': function(data, encoding){ this.res.end(data, encoding); },
   'render': function(filename,args){ this.res.end(view.render(filename,args)); },
   'cookie':{
     '_cookieGetData':'',
@@ -111,8 +111,6 @@ view = {
       filename = __dirname+'/app/views/'+filename; 
     }
     
-    
-    
     var cacheKey = app.md5(filename);
     fn = this._cache[ cacheKey ];
     if(fn){ 
@@ -136,9 +134,12 @@ view = {
     
   },
   '_compile': function(ctx){
-    var code = "var out='"+ ctx.replace(/\('(.*)'\)/g,'("$1")').
-      replace(/'/g,"\\'").
-      replace(/\{\{(.+?)\}\}/g,"'+it.$1+'").
+    var code = "var out='"+
+      ctx.replace(/\\/g,"\\\\").
+      replace(/'/g, "\\'").
+      replace(/\{\{(.+?)\}\}/g, function(m,nmatch){
+        return "'+it."+ nmatch.replace(/\\/g,'') +"+'";
+      }).
       replace(/\s*<%(.+?)%>/g, "';$1 out+='").
       replace(/\n/g,"'+\"\\n\"+'") +"';return out;";    
     //console.log(code);return new Function();

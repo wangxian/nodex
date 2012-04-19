@@ -26,5 +26,4 @@ exports.controller = {
       app.render('index/edit');  
     }
   }
-  
 };
