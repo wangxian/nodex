@@ -7,6 +7,7 @@
 
 app = {
   'req':null, 'res':null, 'config':{}, '_postData': '',
+  'end': function(){ this.res.end(); },
   'render': function(filename,args){ this.res.end(view.render(filename,args)); },
   'cookie':{
     '_cookieGetData':'',
@@ -102,7 +103,6 @@ view = {
   },
   '_cache': {},
   '_render': function(filename,args,forceFile){
-    console.log('\u001b[36mRender view:'+filename+'\u001b[0m');
     args= args||{}; args.partial=this.partial;args.header=this.header;
     if(! filename){
       filename = __dirname+'/app/views/'+app.get.controller+'/'+app.get.action+'.html';
@@ -111,10 +111,16 @@ view = {
       filename = __dirname+'/app/views/'+filename; 
     }
     
+    
+    
     var cacheKey = app.md5(filename);
     fn = this._cache[ cacheKey ];
-    if(fn) return fn(args);
+    if(fn){ 
+      console.log('\u001b[36mRender tmpl use cache - {'+ filename +'} \u001b[0m');
+      return fn(args);
+    }
     else{
+      console.log('\u001b[36mInclude file and render it - {'+ filename +'} \u001b[0m');
       if(path.existsSync(filename)){
         var ctx = fs.readFileSync(filename,'utf-8');
         fn = this._compile(ctx);

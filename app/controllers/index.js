@@ -3,18 +3,28 @@
  */
 
 exports.controller = {    
-  index: function(){
+  'index': function(){
     app.res.setHeader("content-type", "text/html; charset=UTF-8");
     app.render('index/index', {'name':'nodex'});
   },
   
-  'tmpl-cache-view': function(){
-    dump( view._cache );
-    // app.res.end();
-    setTimeout(function(){ app.res.end(); },10000);
+  'finish': function(){
+    app.redirect('/');
   },
-  'tmpl-cache-del': function(){
-    view._cache = {};
-    // app.res.end();
+  
+  'delete': function(){
+    app.redirect('/');
+    app.end();
+  },
+  
+  'edit': function(){
+    
+    if(app.post.title) {
+      app.render('tips', {layout:false, 'message':"修改成功！"});
+    }
+    else {
+      app.render('index/edit');  
+    }
   }
+  
 };
