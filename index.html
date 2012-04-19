@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+
+    <title>NodeX by wangxian</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>NodeX</h1>
+        <h2>fast, simpleness web framework for node.js</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/wangxian/nodex/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/wangxian/nodex/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/wangxian/nodex" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>NodeX</h1>
+
+<p><a href="https://github.com/Version" class="user-mention">@Version</a>: v0.3 preview</p>
+
+<p>Fast 、Simpleness (only one file ,run it) web framework for <a href="http://nodejs.org/" target="_blank">node</a>.</p>
+
+<p>You can easily modify it.</p>
+
+<h2>Installation</h2>
+
+<p><strong>Use npm install</strong></p>
+
+<pre><code>npm install nodex
+</code></pre>
+
+<h2>Quick start</h2>
+
+<p><strong>Clone folder &amp; files from github</strong></p>
+
+<pre><code>git clone git://github.com/wangxian/nodex.git
+</code></pre>
+
+<p>Then go to root directory, run server</p>
+
+<pre><code>node server.js
+</code></pre>
+
+<p>And then view http://localhost:8888/ , you can find server is running .
+port is 8888, You can modify file config.js , <code>PORT: 8888</code></p>
+
+<h1>URL &amp; GET &amp; POST</h1>
+
+<p>Nodex use the controller and method of the url.</p>
+
+<p>For example:</p>
+
+<pre><code>http://localhost:8888/note/list
+// Point to `app/controllers/note.js` and `list` action
+
+http://localhost:8888/
+// Point to `app/controllers/index.js` and `index` action
+
+http://localhost:8888/index
+// Point to `app/controllers/index.js` and `index` action
+
+http://localhost:8888/note
+// Point to `app/controllers/note.js` and `index` action
+</code></pre>
+
+<p>In controller get HTTP GET\POST</p>
+
+<div class="highlight">
+<pre>
+<span class="c1">// print all get</span>
+<span class="nx">dump</span><span class="p">(</span> <span class="nx">app</span><span class="p">.</span><span class="nx">get</span> <span class="p">);</span>
+
+<span class="c1">// print all post</span>
+<span class="nx">dump</span><span class="p">(</span> <span class="nx">app</span><span class="p">.</span><span class="nx">post</span> <span class="p">);</span>
+
+<span class="c1">// htttp://localhost:8888/note/list?id=12</span>
+<span class="c1">// get id=?</span>
+<span class="nx">dump</span><span class="p">(</span> <span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">.</span><span class="nx">id</span> <span class="p">);</span>
+
+<span class="c1">// print all post id</span>
+<span class="nx">dump</span><span class="p">(</span> <span class="nx">app</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">id</span> <span class="p">);</span>
+
+</pre>
+</div>
+
+
+<h1>cookie and session</h1>
+
+<div class="highlight">
+<pre>
+<span class="c1">// set cookie expires 20s</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">cookie</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span><span class="s1">'aa'</span><span class="p">,</span><span class="nx">value</span><span class="o">:</span><span class="s1">'aa'</span><span class="p">,</span><span class="nx">expires</span><span class="o">:</span><span class="mi">20</span><span class="p">}</span> <span class="p">);</span>
+
+<span class="c1">// get cookie, if not set yourkey, return all your cookie</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">cookie</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">'yourkey'</span><span class="p">);</span>
+
+
+<span class="c1">// set cookie now = new Date()</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">session</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">'now'</span><span class="p">,</span><span class="k">new</span> <span class="nb">Date</span><span class="p">());</span>
+
+<span class="c1">// get session, if not set yourkey, return all your session </span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">session</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">'yourkey'</span><span class="p">);</span>
+
+</pre>
+</div>
+
+
+<h1>Layout your page</h1>
+
+<div class="highlight">
+<pre><span class="c1">// @file:index.js</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">controller</span> <span class="o">=</span> <span class="p">{</span>    
+  <span class="nx">index</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">res</span><span class="p">.</span><span class="nx">setHeader</span><span class="p">(</span><span class="s2">"content-type"</span><span class="p">,</span> <span class="s2">"text/html; charset=UTF-8"</span><span class="p">);</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">'index/index'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'name'</span><span class="o">:</span><span class="s1">'nodex'</span><span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+</pre>
+</div>
+
+
+<h1>License</h1>
+
+<p>MIT <a href="http://rem.mit-license.org">http://rem.mit-license.org</a></p>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
