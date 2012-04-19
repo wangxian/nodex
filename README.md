@@ -60,6 +60,9 @@ dump( app.post );
 // get id=?
 dump( app.get.id );
 
+// print all post id
+dump( app.post.id );
+
 ```
 
 # cookie and session
