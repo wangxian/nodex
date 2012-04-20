@@ -5,11 +5,11 @@
           <% for(var i=0;i< it.data.length;i++){ %>          
           <li class="finished">
               
-              <% if(it.data[i].finished == "1"){ %>
-              <del>{{it.data[i].title}}</del> <span>({{it.data[i].post_date.toDateString()}})</span>
+              <% if(it.data[i].finished == '1'){ %>
+              <del>{{it.data[i].title}}</del> <span>({{it.data[i].post_date.toDateString()}} {{it.data[i].post_date.toLocaleTimeString()}})</span>
               <a href="/todo/finish?status=yes&id={{it.data[i].id}}">恢复</a>,
               <% }else{ %>
-              {{it.data[i].title}} <span>({{it.data[i].post_date.toDateString()}})</span>
+              {{it.data[i].title}} <span>({{it.data[i].post_date.toDateString()}} {{it.data[i].post_date.toLocaleTimeString()}})</span>
               <a href="/todo/finish?status=no&id={{it.data[i].id}}">完成</a>,
               <a href="/todo/edit/{{it.data[i].id}}">修改</a>,
               <% } %>

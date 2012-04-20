@@ -5,10 +5,11 @@
  * MIT Licensed
  */
 
+/* application common object */
 app = {
   'req':null, 'res':null, 'config':{}, '_postData': '',
   'end': function(data, encoding){ this.res.end(data, encoding); },
-  'render': function(filename,args){ this.res.end(view.render(filename,args)); },
+  'render': function(filename,args){ try{ return this.res.end(view.render(filename,args)); }catch(e){ console.log(e.stack); this.res.end(e.message);} },
   'cookie':{
     '_cookieGetData':'',
     '_cookieSetData':[],
@@ -81,6 +82,20 @@ app = {
   'redirect': function(url){ this.res.writeHeader(302, {"Location": url}); this.res.end(); }
 };
 
+/**
+ * print some information
+ * @param sting|buffer data
+ * @param string encoding charset,utf8,gbk
+ */
+print = function(data, encoding){ app.res.write(data, encoding); };
+
+/**
+ * print object\string\boolean\number\null
+ * @param array args...
+ */
+dump  = function(){ for(var i=0;i<arguments.length;i++){  app.res.write( '<pre>'+ require('util').inspect(arguments[i]) + '</pre>');  } };
+
+
 /* nodex template */
 view = {
   'render': function(filename,args){
@@ -140,25 +155,14 @@ view = {
       replace(/\{\{(.+?)\}\}/g, function(m,nmatch){
         return "'+"+ nmatch.replace(/\\/g,'') +"+'";
       }).
-      replace(/\s*<%(.+?)%>/g, "';$1 out+='").
+      replace(/\s*<%(.+?)%>/g, function(m,nmatch){
+        return "';"+ nmatch.replace(/\\/g,'') +" out+='";
+      }).
       replace(/\n/g,"'+\"\\n\"+'") +"';return out;";    
     //console.log(code);return new Function();
     return new Function('it',code);
   }
 }
-
-/**
- * print some information
- * @param sting|buffer data
- * @param string encoding charset,utf8,gbk
- */
-print = function(data, encoding){ app.res.write(data, encoding); };
-
-/**
- * print object\string\boolean\number\null
- * @param array args...
- */
-dump  = function(){ for(var i=0;i<arguments.length;i++){  app.res.write( '<pre>'+ require('util').inspect(arguments[i]) + '</pre>');  } };
 
 /* static mime type */
 var contentTypes = {
