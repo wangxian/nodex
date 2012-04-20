@@ -2,7 +2,7 @@
  * index page
  */
 var mysql = require('mysql');
-client = mysql.createClient({ user: 'root', password: '111111',});
+client = mysql.createClient({ 'user': 'root', password: '111111',});
 client.useDatabase('todo');
 
 exports.controller = {    
@@ -35,7 +35,6 @@ exports.controller = {
   },
   
   'delete': function(){
-    var finished = app.get.status == 'yes' ? 1 : 0;
     client.query('delete from todo where id='+ app.get.querypath[0], function (err) {
       if (err) { app.end(err.message); }
       else app.redirect('/todo');
@@ -48,7 +47,7 @@ exports.controller = {
       client.query("update todo set title=? where id="+ id,[app.post.title], function (err,results) {
         if (err) { app.end(err.message); }
         else{
-          app.render('tips', {layout:false, 'message':"修改成功！", title:'success'});
+          app.render('tips', {layout:false, 'message':"修改成功！"});
         }
       });
     }

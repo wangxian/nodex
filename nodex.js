@@ -258,6 +258,7 @@ module.exports = {
           if(req.headers['content-type'] == 'application/x-www-form-urlencoded') app._postData += chunk;
         }).on('end', function(){
           if(app._postData) app.post = querystring.parse(app._postData);
+          else app.post={};
           try{
             controllers = require(__dirname+'/app/controllers/'+ app.get.controller +'.js')['controller'];
             if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();

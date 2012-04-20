@@ -7,14 +7,14 @@
               
               <% if(it.data[i].finished == '1'){ %>
               <del>{{it.data[i].title}}</del> <span>({{it.data[i].post_date.toDateString()}} {{it.data[i].post_date.toLocaleTimeString()}})</span>
-              <a href="/todo/finish?status=yes&id={{it.data[i].id}}">恢复</a>,
+              <a href="/todo-mongodb/finish?status=yes&id={{it.data[i]._id}}">恢复</a>,
               <% }else{ %>
               {{it.data[i].title}} <span>({{it.data[i].post_date.toDateString()}} {{it.data[i].post_date.toLocaleTimeString()}})</span>
-              <a href="/todo/finish?status=no&id={{it.data[i].id}}">完成</a>,
-              <a href="/todo/edit/{{it.data[i].id}}">修改</a>,
+              <a href="/todo-mongodb/finish?status=no&id={{it.data[i]._id}}">完成</a>,
+              <a href="/todo-mongodb/edit/{{it.data[i]._id}}">修改</a>,
               <% } %>
               
-              <a href="/todo/delete/{{it.data[i].id}}" onclick="return confirm('删除以后不能恢复的，确定？');">删除</a>
+              <a href="/todo-mongodb/delete/{{it.data[i]._id}}" onclick="return confirm('删除以后不能恢复的，确定？');">删除</a>
           </li>
           <% } %>
         </ul>
@@ -22,7 +22,7 @@
 
     <div class="box post">
         <h2>新增</h2>
-        <form action="/todo/new" method="post" id="post_new">
+        <form action="/todo-mongodb/new" method="post" id="post_new">
             <input type="hidden" name="csrf" value="" />
             <p><input type="text" name="title" class="long_txt" /></p>
             <p><input type="submit" class="submit" value="添加" /></p>

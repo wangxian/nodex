@@ -1,6 +1,12 @@
 <div class="box">
     <div class="box todos">
-        <h2 class="box">安装todo示例</h2>
+        <h2 class="box">安装todo示例(mongodb版)</h2>
+        <ul>
+          <li>1、安装mongoskin模块，npm install mongoskin</li>
+          <li>2、修改app/controller/todo-mongodb.js 里的 `服务器地址` 配置。</li>
+          <li>3、访问：<a href="/todo-mongodb">http://{{app.req.headers.host}}/todo-mongodb</a> 查看示例。</li>
+        </ul>
+        <h2 class="box">安装todo示例(mysql版)</h2>
         <ul>
           <li>1、把todo.sql导入你的mysql数据库。</li>
           <li>2、安装mysql模块，npm install mysql</li>
