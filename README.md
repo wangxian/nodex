@@ -99,6 +99,37 @@ exports.controller = {
 
 ```
 
+It will render app/views/index/index.html , And layout app/views/layout.html
+Detailed use, please see demo the source code.
+
+### Variable usage:
+
+```javascript
+my name is {{it.name}}
+```
+
+### Statement
+
+```javascript
+<ul>
+
+// if
+<% if(it.finished){ %>
+<b>finished</b>
+<% }else{ %>
+<b>--not---</b>
+<% } %>
+
+// for
+<% for(var i=0;i<it.data.length;i++){ %>
+<li>{{it.data[i].name}}</li>
+<%}%
+
+// ...
+// nodex's template engine syntax structure as same as javascript.
+</ul>
+```
+
 
 # License
 
