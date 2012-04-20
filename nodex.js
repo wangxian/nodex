@@ -254,16 +254,17 @@ module.exports = {
         app.cookie._cookieSetData=[];
         app._postData = '';
         
-        req.on('data', function(chunk){ app._postData += chunk; }).on('end', function(){
-          app.post = querystring.parse(app._postData);
+        req.on('data', function(chunk){// please use formidable.
+          if(req.headers['content-type'] == 'application/x-www-form-urlencoded') app._postData += chunk;
+        }).on('end', function(){
+          if(app._postData) app.post = querystring.parse(app._postData);
           try{
             controllers = require(__dirname+'/app/controllers/'+ app.get.controller +'.js')['controller'];
             if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
             controllers[ app.get.action ]();
             if( typeof(controllers['__destructor']) == "function" ) controllers['__destructor']();
             console.log('\u001b[31mThe operation cost:'+ (new Date().getTime() - startTimer.getTime()) +'ms\u001b[0m');
-          }
-          catch(e){
+          }catch(e){
             //TODO: production: 404 dev: 500
             res.end("Error:" + e.message);
             console.log(e.stack);
