@@ -48,7 +48,7 @@ exports.controller = {
       client.query("update todo set title=? where id="+ id,[app.post.title], function (err,results) {
         if (err) { app.end(err.message); }
         else{
-          app.render('tips', {layout:false, 'message':"修改成功！"});
+          app.render('tips', {layout:false, 'message':"修改成功！", title:'success'});
         }
       });
     }
