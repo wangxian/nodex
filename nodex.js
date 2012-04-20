@@ -104,7 +104,7 @@ view = {
       return this._render(filename,args,false);
     }
     else{
-      if(args['layout']===undefined) args['layout']='layout.html';
+      if(typeof args['layout'] == "undefined") args['layout']='layout.html';
       bargs = app.beget(args);
       bargs['body'] = this._render(filename,args,false);
       return this._render(args['layout'],bargs,false);
