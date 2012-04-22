@@ -1,0 +1,6 @@
+app/
+favicon.ico
+server.js
+config.js
+assets/
+.*
