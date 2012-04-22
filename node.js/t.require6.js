@@ -1,9 +1,9 @@
 /**
  * exports
  */
-try{
-    var t = require('./t10');
-}
-catch(e){
-    console.log(require('util').inspect(e));
-}
+
+require('./t.require5.js');
+// console.log (require.cache );
+// delete require.cache['/Users/wangxian/Sites/nodejs/nodex-tests/node.js/t.require5.js'];
+for(key in require.cache) delete require.cache[key];
+require('./t.require5.js');
