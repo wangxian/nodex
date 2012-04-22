@@ -254,6 +254,8 @@ module.exports = {
         app.cookie._cookieSetData=[];
         app._postData = '';
         
+        if(app.config.DEV){ for(key in require.cache) { delete require.cache[key];} view._cache = {}; }
+        
         req.on('data', function(chunk){// please use formidable.
           if(req.headers['content-type'] == 'application/x-www-form-urlencoded') app._postData += chunk;
         }).on('end', function(){
