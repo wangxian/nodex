@@ -26,6 +26,6 @@ race = (winner, runners...) ->
 cubes = (math.cube num for num in list)
 # console.log cubes
 
-alert "I knew it!" if elvis?
+alert "I knew it!" if math?
 
 
