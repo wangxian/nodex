@@ -3,7 +3,7 @@
  * use mongodb todo-mongodb
  */
 var mongo = require('mongoskin');
-var db = mongo.db('localhost:27017/todo');
+var db = mongo.db('localhost:27017/todo?auto_reconnect=true');
 db.bind('todo');
 
 // db.todo-mongodb.save({title:"new todo-mongodb",finished:0,post_date:new Date()});
