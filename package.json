@@ -1,7 +1,7 @@
 {
   "name": "nodex",
-  "version": "0.3.2",
-  "description": "Fast 、Simpleness (only one file ,run it) web framework for nodejs.",
+  "version": "0.3.5",
+  "description": "Fast 、Simpleness (only one file ,run it) web framework for node.js",
   "homepage": "https://github.com/wangxian/nodex",
   "repository": {
     "type": "git",
