@@ -134,7 +134,7 @@ view = {
     }
     else{
       console.log('\u001b[36mInclude file and render it - {'+ filename +'} \u001b[0m');
-      if(path.existsSync(filename)){
+      if(fs.existsSync(filename)){
         var ctx = fs.readFileSync(filename,'utf-8');
         fn = this._compile(ctx);
         this._cache[ cacheKey ] = fn;
