@@ -14,13 +14,13 @@ app = {
     '_cookieGetData':'',
     '_cookieSetData':[],
     'get': function(name){
-      if(this._cookieGetData == ''){
+      if(this._cookieGetData === ''){
         if(! app.req.headers.cookie) return '';
         this._cookieGetData = {};
         var pairs = app.req.headers.cookie.split(";");
         for(var i=0;i<pairs.length;i++){
           var kv = pairs[i].split("=");
-          if(kv[0]){ this._cookieGetData[kv[0]] = kv[1] || '' }
+          if(kv[0]){ this._cookieGetData[kv[0]] = kv[1] || ''; }
         }
       }
       return name ? (this._cookieGetData[name] || '') : this._cookieGetData;
@@ -29,13 +29,13 @@ app = {
       /* {'name':'','value':'', 'expires':1334112331, 'path':'/', 'domain':'', 'secure':false, 'httponly':false} */
       if(! cookieObj.name) throw new Error('In setCookie([object] cookieObj) ,cookieObj must has key "name"');
       var cookieString = cookieObj.name +'='+  encodeURI(cookieObj.value||'');
-      
+
       if(typeof cookieObj.expires != 'undefined'){ var now=new Date(); now.setTime( now.getTime() + cookieObj.expires*1000 ); cookieString += '; expires='+ now.toUTCString(); }
       if(cookieObj.path){ cookieString += "; path="+ cookieObj.path; }
       if(cookieObj.domain){ cookieString += "; domain="+ cookieObj.domain; }
       if(cookieObj.secure){ cookieString += "; secure"; }
       if(cookieObj.httponly){ cookieString += "; httponly"; }
-      
+
       this._cookieSetData[this._cookieSetData.length] = cookieString;
       app.res.setHeader('Set-Cookie', this._cookieSetData);
     }
@@ -55,7 +55,7 @@ app = {
         else{ delete _sessionData[session_id]; }
       }
       session_id = (1e13*Math.round(Math.random() * 10000) + new Date().getTime()).toString(32);
-      app.cookie.set({'name': this.session_name, 'value': session_id, 'path': '/', 'expires': 2592000}); 
+      app.cookie.set({'name': this.session_name, 'value': session_id, 'path': '/', 'expires': 2592000});
       _sessionData[session_id] = {'updated':new Date().getTime(),'data':{}};
       return session_id;
     },
@@ -74,7 +74,7 @@ app = {
   'md5': function(ctx){ return require('crypto').createHash('md5').update(ctx).digest('hex'); },
   'beget':function(obj){ var F = function(){}; F.prototype = obj; return new F();},
   'extend': function(parent, child){
-    var parent = require(__dirname+'/app/controllers/'+ parent)['controller'];
+    var parent = require(__dirname+'/app/controllers/'+ parent).controller;
     var vchild = this.beget(parent); for(var A in child){ vchild[A] = child[A]; } return vchild;
   },
   'encodeHTML': function (A){return String(A).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")},
@@ -108,7 +108,7 @@ view = {
       bargs = app.beget(args);
       bargs['body'] = this._render(filename,args,false);
       return this._render(args['layout'],bargs,false);
-    }  
+    }
   },
   'partial': function(filename, args){
     return view._render(filename,args,true);
@@ -120,15 +120,15 @@ view = {
   '_render': function(filename,args,forceFile){
     args= args||{}; args.partial=this.partial;args.header=this.header;
     if(! filename){
-      filename = __dirname+'/app/views/'+app.get.controller+'/'+app.get.action+'.html';
+      filename = process.cwd()+'/app/views/'+app.get.controller+'/'+app.get.action+'.html';
     }else{
       if(filename.lastIndexOf('.html')==-1) filename+='.html';
-      filename = __dirname+'/app/views/'+filename; 
+      filename = process.cwd()+'/app/views/'+filename;
     }
-    
+
     var cacheKey = app.md5(filename);
     fn = this._cache[ cacheKey ];
-    if(fn){ 
+    if(fn){
       console.log('\u001b[36mRender tmpl use cache - {'+ filename +'} \u001b[0m');
       return fn(args);
     }
@@ -142,11 +142,11 @@ view = {
       }
       else if(!forceFile) {
         this._cache[ cacheKey ] = function(){ return ''; };
-        return ''; 
+        return '';
       }
-      else { app.res.end('Error:'+ filename + ' not exists.'); } 
+      else { app.res.end('Error:'+ filename + ' not exists.'); }
     }
-    
+
   },
   '_compile': function(ctx){
     var code = "var out='"+
@@ -158,19 +158,19 @@ view = {
       replace(/\s*<%(.+?)%>/g, function(m,nmatch){
         return "';"+ nmatch.replace(/\\/g,'') +" out+='";
       }).
-      replace(/\n/g,"'+\"\\n\"+'") +"';return out;";    
+      replace(/\n/g,"'+\"\\n\"+'") +"';return out;";
     //console.log(code);return new Function();
     return new Function('it',code);
   }
-}
+};
 
 /* static mime type */
 var contentTypes = {
   "avi": "video/x-msvideo","rar": "application/x-rar-compressed",
   "css": "text/css", "deb": "application/x-debian-package","doc": "application/msword",
-  "flv": "video/x-flv", "gif": "image/gif","gz": "application/x-gzip", "html": "text/html", 
-  "jar": "application/java-archive", "jpeg": "image/jpeg", "jpg": "image/jpeg", 
-  "js": "text/javascript", "json": "application/json",'ico': 'image/x-icon',"midi": "audio/midi","mime": "www/mime", 
+  "flv": "video/x-flv", "gif": "image/gif","gz": "application/x-gzip", "html": "text/html",
+  "jar": "application/java-archive", "jpeg": "image/jpeg", "jpg": "image/jpeg",
+  "js": "text/javascript", "json": "application/json",'ico': 'image/x-icon',"midi": "audio/midi","mime": "www/mime",
   "mp4": "video/mp4", "pdf": "application/pdf","png": "image/png", "rtf": "text/rtf", "swf": "application/x-shockwave-flash",
   "tar": "application/x-tar", "tgz": "application/x-tar-gz", "txt": "text/plain",
   "wav": "audio/x-wav", "wma": "audio/x-ms-wma","wmv": "video/x-ms-wmv", "xml": "text/xml",
@@ -178,14 +178,14 @@ var contentTypes = {
 };
 
 /* store user's session data */
-var _sessionData = {}
+var _sessionData = {};
 
-var http = require('http'),
-    fs   = require('fs'),
-    path = require('path'),
-    url  = require('url'),
-    zlib = require('zlib'),
-    querystring = require('querystring');
+var http = require('http');
+var fs   = require('fs');
+var path = require('path');
+var url  = require('url');
+var zlib = require('zlib');
+var querystring = require('querystring');
 
 module.exports = {
   'configure': function(config){
@@ -197,12 +197,12 @@ module.exports = {
     http.createServer(function(req, res){
       res.setHeader('Server', 'NodeX/0.3');
       res.setHeader('X-Powered-By', 'node.js');
-      
+
       var startTimer = new Date();
-      console.log(startTimer + ' - ' + req.url);
-      
+      console.log(startTimer + ' ' + req.url);
+
       if(req.url.slice(1,7) == 'assets' || req.url == '/favicon.ico'){
-        var filename = __dirname + req.url.replace(/\.\./g,'');
+        var filename = process.cwd() + req.url.replace(/\.\./g,'');
         fs.stat(filename, function(error, stat){
            if(error) {
              res.writeHead(500, {'content-type': 'text/plain'});
@@ -215,14 +215,14 @@ module.exports = {
               res.end();
             }else{
               res.setHeader('Content-Type', contentTypes[ filename.slice(filename.lastIndexOf('.')+1) ] || 'text/plain');
-              
+
               if(/\.(gif|png|jpg|js|css)$/i.test(filename)){
                 var expires = new Date();
                 expires.setTime( expires.getTime() + (86400000 * 15) );
                 res.setHeader("Expires",  expires.toUTCString());
                 res.setHeader("Cache-Control", "max-age="+ (86400 * 15));
               }
-              
+
               var raw = fs.createReadStream(filename);
               var acceptEncoding = req.headers['accept-encoding'] || '';
               var matched = /\.(html|js|css)$/i.test(filename);
@@ -239,11 +239,10 @@ module.exports = {
             }
            }
         });
-      }
-      else{
+      } else {
         var rx = url.parse(req.url, true);
         var controller_action = rx.pathname.slice(1).split('/');
-        
+
         app.get = rx.query;
         app.get['controller'] = controller_action[0] ? controller_action.shift() : 'index';
         app.get['action'] = controller_action[0] ? controller_action.shift() : 'index';
@@ -253,16 +252,16 @@ module.exports = {
         app.cookie._cookieGetData='';
         app.cookie._cookieSetData=[];
         app._postData = '';
-        
+
         if(app.config.DEV){ for(key in require.cache) { delete require.cache[key];} view._cache = {}; }
-        
+
         req.on('data', function(chunk){// please use formidable.
-          if(req.headers['content-type'] == 'application/x-www-form-urlencoded') app._postData += chunk;
+          if(req.headers['content-type'] === 'application/x-www-form-urlencoded') app._postData += chunk;
         }).on('end', function(){
           if(app._postData) app.post = querystring.parse(app._postData);
           else app.post={};
           try{
-            controllers = require(__dirname+'/app/controllers/'+ app.get.controller +'.js')['controller'];
+            controllers = require(process.cwd() +'/app/controllers/'+ app.get.controller +'.js')['controller'];
             if( typeof(controllers['__construct']) == "function" ) controllers['__construct']();
             controllers[ app.get.action ]();
             if( typeof(controllers['__destructor']) == "function" ) controllers['__destructor']();

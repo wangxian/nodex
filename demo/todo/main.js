@@ -1,16 +1,10 @@
-/*!
- * NodeX Server
- * Project start: 2012.3.12
- * Copyright(c) 2010 WangXian <xian366@gmail.com>
- * MIT Licensed
+/**
+ * demo todo list
+ * @copyright wangxian
  */
-
-var config = require('./config.js').config,
-       app = require('./nodex.js');
-
-/*-------------------+ One process(For dev) -------------------+*/
+var config = require('./app/conf/default').config;
+var app = require('nodex');
 app.configure(config).run();
-/*-------------------+ One process(For dev) -------------------+*/
 
 
 

@@ -8,7 +8,7 @@
     "url": "git://github.com/wangxian/nodex.git"
   },
   "author": "WangXian <xian366@gmail.com> (http://blog.loopx.cn)",
-  "main": "./nodex.js",
+  "main": "nodex.js",
   "keywords": ["framework", "web", "javascript", "rest", "restful"],
   "engines": { "node": ">=0.6.10" },
   "licenses": [{
