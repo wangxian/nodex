@@ -1,6 +1,10 @@
+var path = require("path");
 
-// if DEV = true , nodex don't cache conctroller and templates.
 this.config = {
-  'DEV' : false,
-  'PORT': 8888
-}
+  "ROOTDIR": path.join(__dirname, "../"),
+
+  // if DEV = true,
+  // nodex don't cache conctroller and templates.
+  "DEV" : false,
+  "PORT": 8888
+};

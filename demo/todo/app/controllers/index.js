@@ -1,10 +1,12 @@
 /**
  * index page
  */
-
-exports.controller = {    
-  'index': function(){
-    app.res.setHeader("content-type", "text/html; charset=UTF-8");
-    app.render('index/index', {'title':'NodeX Setup'});
+console.log(require("nodex"));
+module.exports = {
+  index: function(req, res){
+    // res.end("make a test");
+    res.dump(res)
+    // res.setHeader("content-type", "text/html; charset=UTF-8");
+    // res.render('index/index', {'title':'NodeX Setup'});
   }
 };

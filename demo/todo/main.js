@@ -2,9 +2,13 @@
  * demo todo list
  * @copyright wangxian
  */
-var config = require('./app/conf/default').config;
+// app root dir
 var app = require('nodex');
-app.configure(config).run();
+var config = require('./app/conf/default').config;
+app.set(config);
+app.run();
+
+// console.dir(config);
 
 
 
