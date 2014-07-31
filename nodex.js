@@ -21,35 +21,72 @@ var config = {};
 // Store user's session data
 var sessionData = {};
 
+// assic color style
+var styles = {
+  'bold'      : ['\033[1m',  '\033[22m'],
+  'italic'    : ['\033[3m',  '\033[23m'],
+  'underline' : ['\033[4m',  '\033[24m'],
+  'inverse'   : ['\033[7m',  '\033[27m'],
+  //grayscale
+  'white'     : ['\033[37m', '\033[39m'],
+  'grey'      : ['\033[90m', '\033[39m'],
+  'black'     : ['\033[30m', '\033[39m'],
+  //colors
+  'blue'      : ['\033[34m', '\033[39m'],
+  'cyan'      : ['\033[36m', '\033[39m'],
+  'green'     : ['\033[32m', '\033[39m'],
+  'magenta'   : ['\033[35m', '\033[39m'],
+  'red'       : ['\033[31m', '\033[39m'],
+  'yellow'    : ['\033[33m', '\033[39m']
+};
+
 // app util functions
 var util = {
-  log: function(str){
-    console.log(str);
+  color: function(str, style) {
+    if(!!styles[style]) { str = styles[style][0] + str + styles[style][1]; }
+    return str;
   },
+
+  log: function(str, style) {
+    return 0;
+    style = style || "grey";
+    var now = new Date();
+    var hh = now.getHours();
+    var mm = now.getMinutes();
+    var ss = now.getSeconds();
+    var time = (hh<0 ? '0'+hh : hh) +":"+ (mm<0 ? '0'+mm : mm) +":" + (ss<0 ? '0'+ss : ss);
+    console.log(util.color(util.color(time, "bold"), "grey"), util.color(str, style));
+  },
+
   beget: function(obj){
     var func = function(){};
     func.prototype = obj;
     return new func();
   },
+
   extend: function(parent, child){
     var c = require(config.ROOTDIR +'/app/controllers/'+ parent);
     var vchild = this.beget(c);
     for(var k in child){ vchild[k] = child[k]; }
     return vchild;
   },
+
   md5: function(str){
     return require("crypto").createHash("md5").update(str).digest("hex");
   },
+
   encodeHTML: function (A){
     return String(A).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   },
+
   decodeHTML: function (B){
     return String(B).replace(/&quot;/g,'"').replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&").replace(/&#([\d]+);/g,function(C, D){
       return String.fromCharCode(parseInt(D,10));
     });
-  },
+  }
 };
 
+// middleware cookie
 function cookie(req, res) {
   var cookieGetData = "";
   var cookieSetData = [];
@@ -85,6 +122,7 @@ function cookie(req, res) {
   };
 }
 
+// middleware session
 function session(req, res) {
   return {
     sessionName: "NODEXSID",
@@ -143,79 +181,69 @@ function session(req, res) {
 }
 
 // app view template
-function view(req, res) {
-  return {
-    'render': function(filename,args){
-      args = args || {};
-      if(args.layout === false) {
-        return this.preRender(filename,args,false);
-      }
-      else{
-        if(typeof args.layout === "undefined") args.layout = 'layout.html';
-        var bargs = util.beget(args);
-        bargs.body = this.preRender(filename, args, false);
-        return this.preRender(args.layout, bargs, false);
-      }
-    },
+var view = {
+  render: function(filename, args){
+    args = args || {};
+    if(args.layout === false) {
+      return this.preRender(filename, args);
+    } else {
+      if(typeof args.layout === "undefined") args.layout = 'layout.html';
 
-    partial: function(filename, args){
-      return view.preRender(filename,args,true);
-    },
-
-    header: function(filename, args){
-      return view.preRender(filename,args,false);
-    },
-
-    cache: {},
-    preRender: function(filename,args,forceFile){
-      args= args||{}; args.partial=this.partial;args.header=this.header;
-      if(! filename){
-        filename = config.ROOTDIR +'/app/views/'+ req.get.controller+'/'+ req.get.action+'.html';
-      } else {
-        if(filename.lastIndexOf('.html')==-1) filename+='.html';
-        filename = config.ROOTDIR+'/app/views/'+filename;
-      }
-
-      var cacheKey = util.md5(filename);
-      var fn = this.cache[ cacheKey ];
-      if(fn){
-        util.log('\u001b[36mRender tmpl use cache - {'+ filename +'} \u001b[0m');
-        return fn(args);
-      }
-      else{
-        util.log('\u001b[36mInclude file and render it - {'+ filename +'} \u001b[0m');
-        if(fs.existsSync(filename)){
-          var ctx = fs.readFileSync(filename,'utf-8');
-          fn = this.compile(ctx);
-          this.cache[ cacheKey ] = fn;
-          return fn(args);
-        }
-        else if(!forceFile) {
-          this.cache[ cacheKey ] = function(){ return ""; };
-          return "";
-        }
-        else { res.end('Error:'+ filename + ' not exists.'); }
-      }
-    },
-
-    // Compile html string
-    compile: function(str){
-      var code = "var out='"+
-        str.replace(/\\/g,"\\\\").
-        replace(/'/g, "\\'").
-        replace(/\{\{(.+?)\}\}/g, function(m,nmatch){
-          return "'+"+ nmatch.replace(/\\/g,"") +"+'";
-        }).
-        replace(/\s*<%(.+?)%>/g, function(m,nmatch){
-          return "';"+ nmatch.replace(/\\/g,"") +" out+='";
-        }).
-        replace(/\n/g,"'+\"\\n\"+'") +"';return out;";
-
-      // util.log(code);return new Function();
-      return new Function('it',code);
+      var bargs = util.beget(args);
+      bargs.body = this.preRender(filename, args);
+      return this.preRender(args.layout, bargs);
     }
-  };
-}
+  },
+
+  include: function(filename, args){
+    return view.preRender(filename, args);
+  },
+
+  cache: {},
+  preRender: function(filename, args){
+    args = args || {};
+    args.include = this.include;
+
+    var fullname = config.ROOTDIR +'/app/views/'+ filename;
+    var cacheKey = util.md5(fullname);
+    var fn = this.cache[ cacheKey ];
+
+    if(fn){
+      util.log('load template cache '+ filename, "blue");
+      return fn(args);
+    } else {
+      if(fs.existsSync(fullname)){
+        var ctx = fs.readFileSync(fullname, 'utf-8');
+        util.log("compile template "+ filename, "yellow");
+
+        fn = this.compile(ctx);
+        this.cache[ cacheKey ] = fn;
+        return fn(args);
+      } else {
+        util.log('Error:'+ fullname + ' not exists.', "red");
+        return "";
+      }
+    }
+  },
+
+  // Compile html string
+  compile: function(str){
+    var code = "var out='"+
+      str.replace(/\\/g,"\\\\").
+      replace(/'/g, "\\'").
+      replace(/\{\{(.+?)\}\}/g, function(m,nmatch){
+        return "'+"+ nmatch.replace(/\\/g,"") +"+'";
+      }).
+      replace(/\s*<%(.+?)%>/g, function(m,nmatch){
+        return "';"+ nmatch.replace(/\\/g,"") +" out+='";
+      }).
+      replace(/\n/g,"'+\"\\n\"+'") +"';return out;";
+
+    // console.log(code);return new Function();
+    return new Function('it', code);
+  }
+};
+
 
 /* static mime type */
 var contentTypes = {
@@ -254,29 +282,41 @@ module.exports = {
   // usually util
   util: util,
 
+  // run nodex from here
   run: function(){
+    // start node http server
     http.createServer(function(req, res){
-      res.setHeader('Server', 'nodex/0.3');
-      res.setHeader('X-Powered-By', 'node.js');
+      res.setHeader('Server', 'nodex/0.5');
 
-      var startTimer = new Date();
-      util.log(startTimer + ' ' + req.url);
+      var loadStartTime = new Date().getTime();
+      var logStr = req.method +" "+ req.url +" ";
 
+      // static dir is asset and handle favicon.icon
       if(req.url.slice(1,7) == 'assets' || req.url == '/favicon.ico'){
         var filename = config.ROOTDIR + req.url.replace(/\.\./g, "");
+
+        // check the flle state
         fs.stat(filename, function(error, stat){
-           if(error) {
-             res.writeHead(500, {'content-type': 'text/plain'});
-             res.end('404 File Not Found.');
-           } else {
+          if(error) {
+            util.log(logStr + util.color("500", "red") + " " + (new Date().getTime() - loadStartTime)+"ms");
+            res.writeHead(500, {'content-type': 'text/plain'});
+            res.end('404 File Not Found.');
+          } else {
             var lastModified = stat.mtime.toUTCString();
             res.setHeader("Last-Modified", lastModified);
+
+            // file cache, set 304 status
             if (req.headers['if-modified-since'] && lastModified == req.headers['if-modified-since']) {
+              util.log(logStr + util.color("304", "yellow") + " " + (new Date().getTime() - loadStartTime)+"ms");
               res.writeHead(304, "Not Modified");
               res.end();
+              return 0;
             } else {
+
+              // set file stream content-type
               res.setHeader('Content-Type', contentTypes[ filename.slice(filename.lastIndexOf('.')+1) ] || 'text/plain');
 
+              // images cache file
               if(/\.(gif|png|jpg|js|css)$/i.test(filename)){
                 var expires = new Date();
                 expires.setTime( expires.getTime() + (86400000 * 15) );
@@ -287,21 +327,26 @@ module.exports = {
               var raw = fs.createReadStream(filename);
               var acceptEncoding = req.headers['accept-encoding'] || "";
               var matched = /\.(html|js|css)$/i.test(filename);
-              if(matched && /\bgzip\b/.test(acceptEncoding)){
+              if( matched && /\bgzip\b/.test(acceptEncoding) ) {
+                // support gzip
                 res.writeHead(200, {'Content-Encoding': 'gzip'});
                 raw.pipe(zlib.createGzip()).pipe(res);
-              } else if(matched && /\bdeflate\b/.test(acceptEncoding)) {
+              } else if( matched && /\bdeflate\b/.test(acceptEncoding) ) {
+                // support deflate
                 res.writeHead(200, {'Content-Encoding': 'deflate'});
                 raw.pipe(zlib.createDeflate()).pipe(res);
               } else {
+                // res stream
                 res.writeHead(200);
                 raw.pipe(res);
               }
+              util.log(logStr + util.color("200", "green") + " " + (new Date().getTime() - loadStartTime)+"ms");
             }
-           }
+
+
+          }
         });
       } else {
-
         // Parse url query
         var rx = url.parse(req.url, true);
 
@@ -320,7 +365,7 @@ module.exports = {
         // log detail object
         res.dump = function(data){
           for(var i=0; i<arguments.length; i++){
-            res.write( '<pre>'+ require('util').inspect(arguments[i]) + '</pre>');
+            res.end( '<pre>'+ require('util').inspect(arguments[i]) + '</pre>');
           }
         };
 
@@ -331,13 +376,12 @@ module.exports = {
         };
 
         // Render view template
-        req.render = function(filename, args) {
-          try{
-            return res.end(view.render(filename, args));
-          } catch(e) {
-            util.log(e.stack);
-            res.end(e.message);
-          }
+        res.render = function(filename, args){
+          args = args || {};
+          args.get  = req.get;
+          args.post = req.post;
+          filename  = req.get.controller +"/"+ req.get.action +".html";
+          res.end(view.render(filename, args));
         };
 
         // Support cookie and session
@@ -357,10 +401,9 @@ module.exports = {
             req.postRawData += chunk;
           }
         }).on('end', function(){
-          if(req.postRawData !== "") {
-            req.post = querystring.parse(req.postRawData);
-          }
 
+          // post rew data
+          if(req.postRawData !== "") { req.post = querystring.parse(req.postRawData); }
           try {
             var controllers = require(config.ROOTDIR +'/app/controllers/'+ req.get.controller +'.js');
 
@@ -376,18 +419,20 @@ module.exports = {
               controllers.__destructor(req, res);
             }
 
-            util.log('\u001b[31mcost:'+ (new Date().getTime() - startTimer.getTime()) +'ms\u001b[0m');
+            util.log(logStr + util.color("200", "green") + " " + (new Date().getTime() - loadStartTime)+"ms");
           } catch(e) {
             //TODO: production: 404 dev: 500
+            util.log(logStr + util.color("500", "red") + " " + (new Date().getTime() - loadStartTime)+"ms");
             res.end("Error:"+ e.message);
-            util.log(e.stack);
+            console.error(e.stack);
             return 0;
           }
         });
+
       }
     }).listen(config.PORT);
 
-    util.log('server running at http://127.0.0.1:'+ config.PORT);
+    util.log("nodex running at http://127.0.0.1:"+ config.PORT, "grey" );
   }
 };
 
