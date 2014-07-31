@@ -48,7 +48,6 @@ var util = {
   },
 
   log: function(str, style) {
-    return 0;
     style = style || "grey";
     var now = new Date();
     var hh = now.getHours();
